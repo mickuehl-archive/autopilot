@@ -1,0 +1,11 @@
+# generic dependencies for all environments
+#AWSIoTPythonSDK == 1.4.7
+#paho-mqtt == 1.5.0
+pynput == 1.6.8
+
+# dependencies for the Raspberry
+Adafruit-PCA9685 == 1.0.1
+adafruit-circuitpython-pca9685 == 3.3.1
+adafruit-circuitpython-motor == 3.1.1
+Adafruit-PlatformDetect == 2.5.0
+
