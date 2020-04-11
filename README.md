@@ -25,9 +25,3 @@ scp -i $SSH_KEY -r hack cloud@$TARGET_PI:/home/cloud/
 ```
 
 
-
-https://circuitpython.readthedocs.io/projects/pca9685/en/latest/index.html
-https://circuitpython.readthedocs.io/projects/servokit/en/latest/
-
-https://github.com/adafruit/Adafruit_CircuitPython_Motor
-https://github.com/adafruit/Adafruit_CircuitPython_ServoKit
