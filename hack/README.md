@@ -23,5 +23,7 @@ A collection of scripts to test the various hardware components and to experimen
 
 * https://learn.adafruit.com/bno055-absolute-orientation-sensor-with-raspberry-pi-and-beaglebone-black
 * https://learn.adafruit.com/adafruit-bno055-absolute-orientation-sensor
+* https://github.com/adafruit/Adafruit_CircuitPython_BNO055
 
+i2cdetect -y 1
 
