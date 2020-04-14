@@ -4,6 +4,7 @@
 pynput == 1.6.8
 
 # dependencies for the Raspberry
+picamera == 1.13
 Adafruit-PCA9685 == 1.0.1
 adafruit-circuitpython-pca9685 == 3.3.1
 adafruit-circuitpython-motor == 3.1.1
