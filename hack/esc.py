@@ -1,41 +1,38 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import busio
 import time
-from board import SCL, SDA
-from adafruit_pca9685 import PCA9685
-from adafruit_motor import servo
+from vehicle import Vehicle
 
-CHANNEL = 8
-FREQ = 50
-MAX_SPEED = 0.25
-FORWARD = 1.0
-REVERSE = -1.0
+if __name__ == '__main__':
+    v = Vehicle()
 
-i2c = busio.I2C(SCL, SDA)
+    # test the ESC
+    print("Testing the ESC")
 
-# Create a simple PCA9685 class instance.
-pca = PCA9685(i2c)
-pca.frequency = FREQ
+    print("Speed = 0.2")
+    v.motor_speed(0.2)
+    time.sleep(1)
+    
+    print("Speed = 0.1")
+    v.motor_speed(0.1)
+    time.sleep(2)
 
-esc = servo.ContinuousServo(pca.channels[CHANNEL])
-esc.throttle = 0
+    # accelerate and break
+    print("Speed = 0.2")
+    v.motor_speed(0.2)
+    time.sleep(1)
+    print("Break = -0.1")
+    v.motor_speed(0.1, -1.0)
+    time.sleep(1)
 
-throttle = 0.0
-while throttle < MAX_SPEED:
-    esc.throttle = throttle
-    throttle += 0.01
-    time.sleep(0.2)
+    # reverse
+    print("Speed = -0.2")
+    v.motor_speed(0.2, -1.0)
+    time.sleep(2)
 
-esc.throttle = 0
-time.sleep(3)
+    # stop
+    v.motor_speed(0)
 
-throttle = 0.0
-while throttle < MAX_SPEED:
-    esc.throttle = throttle * REVERSE
-    throttle += 0.01
-    time.sleep(0.2)
-
-esc.throttle = 0
-pca.deinit()
+    print("Done ...")
+    v.shutdown()

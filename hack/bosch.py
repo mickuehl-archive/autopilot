@@ -2,22 +2,25 @@
 # -*- coding: utf-8 -*-
 
 import time
-import board
-import busio
-import adafruit_bno055
+from vehicle import Vehicle
 
-i2c = busio.I2C(board.SCL, board.SDA)
-sensor = adafruit_bno055.BNO055(i2c)
+if __name__ == '__main__':
+    v = Vehicle()
 
-while True:
-    print("Temperature: {} degrees C".format(sensor.temperature))
-    print("Accelerometer (m/s^2): {}".format(sensor.acceleration))
-    print("Magnetometer (microteslas): {}".format(sensor.magnetic))
-    print("Gyroscope (rad/sec): {}".format(sensor.gyro))
-    print("Euler angle: {}".format(sensor.euler))
-    print("Quaternion: {}".format(sensor.quaternion))
-    print("Linear acceleration (m/s^2): {}".format(sensor.linear_acceleration))
-    print("Gravity (m/s^2): {}".format(sensor.gravity))
+    print("Testing the acceleration sensors")
+    
+    for i in range(20):
+        print("T={:04.1f}, \tacc={a[0]} {a[1]} {a[2]}, \tlinear={la[0]} {la[1]} {la[2]}, \teuler={e[0]} {e[1]} {e[2]}, \tgyro={g[0]} {g[1]} {g[2]}, \tmag={m[0]} {m[1]} {m[2]}, \tqat={q[0]} {q[1]} {q[2]}".format(v.sensor().temperature, 
+            a=v.sensor().acceleration,
+            m=v.sensor().magnetic,
+            g=v.sensor().gyro,
+            e=v.sensor().euler,
+            la=v.sensor().linear_acceleration,
+            q=v.sensor().quaternion
+        ))
+
+        time.sleep(1)
+
     print()
-
-    time.sleep(1)
+    print("Done ...")
+    v.shutdown()
