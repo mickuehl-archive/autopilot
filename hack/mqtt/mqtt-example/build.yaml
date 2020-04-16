@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: List
+items:
+
+- kind: BuildConfig
+  apiVersion: 'v1'
+  metadata:
+    name: 'aws-iot-mqtt'
+    annotations:
+      description: Base image for everything
+      tags: "python,amqp,mqtt"
+    labels:
+      app: aws-iot-mqtt
+  spec:
+    runPolicy: 'Serial' 
+    triggers: 
+      - type: 'ImageChange'
+      - type: 'ConfigChange'
+    source: 
+      git:
+        uri: 'https://github.com/mickuehl/cloudpi.git'
+        ref: 'master'
+      contextDir: 'examples/mqtt-example'
+    strategy:
+      type: Docker
+      dockerStrategy:
+        dockerfilePath: Dockerfile
+        forcePull: false
+    output:
+      to:
+        kind: ImageStreamTag
+        name: 'ubi8-aws-iot-mqtt:latest'
+        #namespace: openshift
+
+- kind: ImageStream
+  apiVersion: 'v1'
+  metadata:
+    name: 'ubi8-aws-iot-mqtt'
+    annotations:
+      description: Base image for everything
+      tags: "python,amqp,mqtt,aws,iot"
+    labels:
+      app: aws-iot-mqtt
+    #namespace: openshift
