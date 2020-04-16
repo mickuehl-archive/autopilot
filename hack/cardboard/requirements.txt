@@ -4,7 +4,7 @@
 pynput == 1.6.6
 pandas == 1.0.1
 PrettyTable == 0.7.2
-tensorflow == 1.14.0
+tensorflow == 1.15.2
 adafruit-circuitpython-motorkit == 1.4
 Pillow == 7.0.0
 picamera == 1.13
