@@ -11,16 +11,25 @@ if __name__ == '__main__':
     print("Testing the servo")
     v.direction(0)
     time.sleep(1)
-    for i in range(0, 90):
-        v.direction(i)
-        time.sleep(0.05)
 
-    time.sleep(1)
-    for i in range(0, 90):
-        v.direction(i * -1)
-        time.sleep(0.05)
+    # wiggle left/right a bit
+    v.direction(20)
+    time.sleep(0.2)
 
+    v.direction(-20)
+    time.sleep(0.2)
+
+    v.direction(0)
+
+    v.direction(40)
     time.sleep(1)
+
+    v.direction(0)
+    time.sleep(1)
+
+    v.direction(-40)
+    time.sleep(1)
+
     v.direction(0)
     
     print("Done ...")

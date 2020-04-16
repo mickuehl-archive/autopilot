@@ -15,6 +15,15 @@ if __name__ == '__main__':
     v.left_led_off()
     v.right_led_off()
 
+    # blink
+    for i in range(3):
+        v.left_led_on()
+        v.right_led_on()
+        time.sleep(0.5)
+        v.left_led_off()
+        v.right_led_off()
+        time.sleep(0.5)
+
     # test the ESC
     print("Testing the ESC")
     v.motor_speed(0.2)
@@ -24,18 +33,17 @@ if __name__ == '__main__':
     # test the servo
     print("Testing the servo")
     v.direction(0)
-    time.sleep(1)
-    for i in range(0, 90):
-        v.direction(i)
-        time.sleep(0.05)
+    time.sleep(5)
 
-    time.sleep(1)
-    for i in range(0, 90):
-        v.direction(i * -1)
-        time.sleep(0.05)
+    # wiggle left/right a bit
+    v.direction(20)
+    time.sleep(0.4)
 
-    time.sleep(1)
+    v.direction(-20)
+    time.sleep(0.4)
+
     v.direction(0)
+    
     
     # test the distance sensor and acceleration sensors
 

@@ -15,12 +15,12 @@ echo "source venv/bin/activate"
 
 ```shell
 
-export SSH_KEY="~/devel/workspace/mickuehl/edgepi/bin/edgepi"
-export TARGET_PI="cloudpi02"
+export PI_KEY="~/devel/workspace/mickuehl/edgepi/bin/edgepi"
+export PI_TARGET="cloudpi02"
 
-scp -i $SSH_KEY -r src cloud@$TARGET_PI:/home/cloud/
+scp -i $PI_KEY -r src cloud@$PI_TARGET:/home/cloud/
 
-scp -i $SSH_KEY -r hack cloud@$TARGET_PI:/home/cloud/
+scp -i $PI_KEY -r hack cloud@$PI_TARGET:/home/cloud/
 
 ```
 

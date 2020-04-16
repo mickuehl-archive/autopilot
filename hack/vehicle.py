@@ -12,11 +12,12 @@ import RPi.GPIO as GPIO
 
 PCA_FREQUENCY = 50
 
-LEFT_LED_CHANNEL = 8
-RIGHT_LED_CHANNEL = 11
+LEFT_LED_CHANNEL = 11
+RIGHT_LED_CHANNEL = 8
 
 SERVO_CHANNEL = 3
 ABSOLUTE_SERVO_RANGE = 120
+SERVO_TRIM = -4
 
 LED_OFF = 0
 LED_ON = 0xFFFF
@@ -67,6 +68,7 @@ class Vehicle:
         self.servo1 = servo.Servo(self.pca.channels[SERVO_CHANNEL])
         self.servo_abs_range = ABSOLUTE_SERVO_RANGE
         self.servo_range = self.servo_abs_range / 2
+        self.servo_trim = SERVO_TRIM
         self.direction(0)
 
         # Bosch BNO055 sensor
@@ -98,7 +100,7 @@ class Vehicle:
         if angle < self.servo_range * -1:
             angle = self.servo_range * -1
 
-        self.servo1.angle = self.servo_range + angle
+        self.servo1.angle = self.servo_range +self.servo_trim + angle
 
     def sensor(self):
         return self.bosch
