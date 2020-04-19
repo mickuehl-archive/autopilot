@@ -16,7 +16,7 @@ import tornado.gen
 from .. import utils
 
 
-class LocalWebController(tornado.web.Application):
+class WebController(tornado.web.Application):
 
     def __init__(self):
         print('Starting Server...', end='')

@@ -14,10 +14,10 @@ if __name__ == '__main__':
 
     # wiggle left/right a bit
     v.direction(20)
-    time.sleep(0.2)
+    time.sleep(1)
 
     v.direction(-20)
-    time.sleep(0.2)
+    time.sleep(1)
 
     v.direction(0)
 
@@ -31,6 +31,7 @@ if __name__ == '__main__':
     time.sleep(1)
 
     v.direction(0)
+    time.sleep(1)
     
     print("Done ...")
     v.shutdown()

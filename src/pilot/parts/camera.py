@@ -3,6 +3,7 @@ import time
 import glob
 import numpy as np
 from PIL import Image
+
 from pilot.utils import rgb2gray
 
 

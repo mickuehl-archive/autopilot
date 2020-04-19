@@ -50,6 +50,7 @@ class Vehicle:
 
         # Set the PWM frequency to e.g. 50hz.
         self.pca.frequency = PCA_FREQUENCY
+        time.sleep(1)
 
         # the different actors/sensors
 
@@ -62,6 +63,7 @@ class Vehicle:
         # ESC
         self.esc = servo.ContinuousServo(self.pca.channels[ESC_CHANNEL])
         self.max_speed = ESC_MAX_SPEED
+        time.sleep(1)
         self.motor_speed(0)
 
         # servo
@@ -69,10 +71,14 @@ class Vehicle:
         self.servo_abs_range = ABSOLUTE_SERVO_RANGE
         self.servo_range = self.servo_abs_range / 2
         self.servo_trim = SERVO_TRIM
+        time.sleep(1)
         self.direction(0)
 
         # Bosch BNO055 sensor
         self.bosch = adafruit_bno055.BNO055(i2c_bus)
+        time.sleep(1)
+
+        print("Vehicle is ready")
 
     def shutdown(self):
         self.pca.deinit()
