@@ -9,10 +9,10 @@ SLEEP = 0.5
 
 def run_tests(v):
     running = True
-    print("Testing the range finder")
+    print("Testing the acceleration sensor")
 
     while running:
-        print("Distance (cm):\t{}".format(v.distance()))
+        print("Accelerometer (m/s^2):\t{}\tLinear acceleration (m/s^2):\t{}".format(v.sensor().acceleration, v.sensor().linear_acceleration))
         time.sleep(SLEEP)
 
 

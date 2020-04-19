@@ -9,10 +9,10 @@ SLEEP = 0.5
 
 def run_tests(v):
     running = True
-    print("Testing the range finder")
+    print("Testing the gyro")
 
     while running:
-        print("Distance (cm):\t{}".format(v.distance()))
+        print("Gyroscope (rad/sec):\t{}".format(v.sensor().gyro))
         time.sleep(SLEEP)
 
 
