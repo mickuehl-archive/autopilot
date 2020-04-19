@@ -2,6 +2,7 @@
 #AWSIoTPythonSDK == 1.4.7
 #paho-mqtt == 1.5.0
 pynput == 1.6.8
+tornado == 6.0.4
 
 # dependencies for the Raspberry
 picamera == 1.13
