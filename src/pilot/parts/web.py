@@ -22,7 +22,7 @@ class WebController(tornado.web.Application):
         print('Starting Server...', end='')
 
         this_dir = os.path.dirname(os.path.realpath(__file__))
-        self.static_file_path = os.path.join(this_dir, 'templates', 'static')
+        self.static_file_path = os.path.join(this_dir, 'public', 'assets')
         self.angle = 0.0
         self.throttle = 0.0
         self.mode = 'user'
@@ -33,7 +33,7 @@ class WebController(tornado.web.Application):
             (r"/", RedirectHandler, dict(url="/drive")),
             (r"/drive", DriveAPI),
             (r"/video", VideoAPI),
-            (r"/static/(.*)", StaticFileHandler,
+            (r"/assets/(.*)", StaticFileHandler,
              {"path": self.static_file_path}),
         ]
 
@@ -64,7 +64,7 @@ class DriveAPI(RequestHandler):
 
     def get(self):
         data = {}
-        self.render("templates/vehicle.html", **data)
+        self.render("public/vehicle.html", **data)
 
     def post(self):
         data = tornado.escape.json_decode(self.request.body)
