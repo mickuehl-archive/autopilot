@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
         # the car parts
         servo_channel = Channel(channel=STEERING_CHANNEL)
-        servo = Servo(channel=servo_channel.channel(), range=130)
+        servo = Servo(channel=servo_channel.channel(), angle=130, trim=-4)
         p.add(servo, inputs=['user/angle'])
 
         # start the vehicle's main loop

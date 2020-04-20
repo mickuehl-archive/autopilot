@@ -5,10 +5,11 @@ from adafruit_motor import servo
 
 class Servo:
 
-    def __init__(self, channel=None, range=130, trim=0):
+    def __init__(self, channel=None, angle=130, trim=0):
 
         self.channel = channel
-        self.servo_range = range / 2
+        self.servo_angle = angle
+        self.servo_range = angle / 2
         self.servo_trim = trim
         self.angle = self.servo_range
 
@@ -23,7 +24,12 @@ class Servo:
             self.servo.angle = self.angle
 
     def run_threaded(self, angle):
-        self.angle = (self.servo_range * angle) + self.servo_range + self.servo_trim 
+        a = (self.servo_range * angle) + self.servo_range + self.servo_trim 
+        if a < 0:
+            a = 0
+        if a > self.servo_angle:
+            a = self.servo_angle
+        self.angle = a
 
     # angle = [-1.0 .. +1.0]
     def run(self, angle):
