@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# golang
+go.sum
+
 # C extensions
 *.so
 
@@ -22,7 +25,6 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-
 # Environments
 .env
 .venv
@@ -31,12 +33,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
-# mkdocs documentation
-/site
-
-# Pyre type checker
-.pyre/
 
 # IDE etc
 .vscode/
