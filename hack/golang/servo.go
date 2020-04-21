@@ -14,6 +14,7 @@ import (
 const (
 	frequency      = 50
 	channel   byte = 3
+	name           = "servo-test"
 )
 
 var (
@@ -103,7 +104,7 @@ func main() {
 		})
 	}
 
-	robot := gobot.NewRobot("gobot",
+	robot := gobot.NewRobot(name,
 		[]gobot.Connection{r},
 		[]gobot.Device{pca9685},
 		work,
