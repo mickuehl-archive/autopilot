@@ -14,10 +14,10 @@ type (
 	Config struct {
 		frequency int // PCA9685 clock speed
 		// actuators
-		servoChan byte // channel of the servo
-		escChan   byte // channel of the speed controller
-		led1Chan  byte // channels of the two back/break LEDs
-		led2Chan  byte
+		servoChan int // channel of the servo
+		escChan   int // channel of the speed controller
+		led1Chan  int // channels of the two back/break LEDs
+		led2Chan  int
 
 		// actuator pre-sets
 
@@ -34,6 +34,10 @@ type (
 		escMinPulse int
 		// max pulse length out of 4096
 		escMaxPulse int
+		// zero pulse length out of 4096
+		escZeroPulse int
+		// esc can reverse if true
+		escCanReverse bool
 	}
 
 	// Pilot is a collection of assets that make up a vehicle
@@ -98,9 +102,17 @@ func (p *Pilot) Start() error {
 
 	// wait for the hardware to be ready then calibrate the vehicle
 	time.Sleep(1000 * time.Millisecond)
+	// steering to zero
 	p.Direction(0)
+	// calibrate & reset the esc
+	p.actuators.SetPWM(p.cfg.escChan, 0, uint16(p.cfg.escMaxPulse))
+	time.Sleep(200 * time.Millisecond)
+	p.actuators.SetPWM(p.cfg.escChan, 0, uint16(p.cfg.escMinPulse))
+	time.Sleep(200 * time.Millisecond)
+	p.actuators.SetPWM(p.cfg.escChan, 0, uint16(p.cfg.escZeroPulse))
+	time.Sleep(200 * time.Millisecond)
 	p.Throttle(0.0)
-
+	time.Sleep(200 * time.Millisecond)
 	// all good
 	return nil
 }
@@ -120,7 +132,7 @@ func (p *Pilot) Direction(value int) {
 	pulse := uint16(degree2pulse(direction, p.cfg.servoMinPulse, p.cfg.servoMaxPulse, p.cfg.servoMaxRange))
 
 	// set the servo pulse
-	err := p.actuators.SetPWM(3, uint16(0), pulse)
+	err := p.actuators.SetPWM(p.cfg.servoChan, uint16(0), pulse)
 	if err != nil {
 		log.Printf(err.Error())
 	}
@@ -129,6 +141,45 @@ func (p *Pilot) Direction(value int) {
 
 // Throttle sets the motor speed
 func (p *Pilot) Throttle(value float32) {
+
+	if p.cfg.escCanReverse {
+		// can reverse
+		if value < -1.0 {
+			p.throttle = -1.0
+		} else if value > 1.0 {
+			p.throttle = 1.0
+		} else {
+			p.throttle = value
+		}
+	} else {
+		// no reverse
+		if value < 0.0 {
+			p.throttle = 0.0
+		} else if value > 1.0 {
+			p.throttle = 1.0
+		} else {
+			p.throttle = value
+		}
+	}
+
+	pulseOn := p.cfg.escMinPulse
+	pulseOff := 0
+
+	if p.throttle == 0.0 {
+		pulseOn = 0
+		pulseOff = p.cfg.escZeroPulse
+	} else if p.throttle > 0.0 {
+		pulseOff = p.cfg.escZeroPulse + int(float32(p.cfg.escMaxPulse-p.cfg.escZeroPulse)*p.throttle)
+	} else {
+		// FIXME ???
+	}
+
+	// set the servo pulse
+	log.Printf("Throttle: %f => (%d,%d)", p.throttle, pulseOn, pulseOff) // FIXME remove this
+	err := p.actuators.SetPWM(p.cfg.escChan, uint16(pulseOn), uint16(pulseOff))
+	if err != nil {
+		log.Printf(err.Error())
+	}
 
 }
 
@@ -159,8 +210,10 @@ func newConfig() *Config {
 		servoMaxRange:   180,
 		servoRangeLimit: 30,
 		// ESC
-		escMinPulse: 300,
-		escMaxPulse: 700,
+		escMinPulse:   300,
+		escMaxPulse:   700,
+		escZeroPulse:  580,
+		escCanReverse: false,
 	}
 
 	return &c
@@ -168,4 +221,15 @@ func newConfig() *Config {
 
 func degree2pulse(deg, min, max, r int) int {
 	return min + ((max-min)/r)*deg
+}
+
+func throttle2pulse(throttle float32, zero, min, max int, reverse bool) int {
+	// map the throttle [-1.0,1.0] to [0,1.0]
+	return zero + int(throttle*float32(max-min))
+}
+
+// map a value from range r1 onto range r2
+func mapRange(x, r1min, r1max, r2min, r2max int) int {
+	ratio := float64(r2max-r2min) / float64(r1max-r1min)
+	return int(float64(x) * ratio)
 }
