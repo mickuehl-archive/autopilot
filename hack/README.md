@@ -9,7 +9,7 @@ A collection of scripts to test the various hardware components and to experimen
 * https://learn.adafruit.com/16-channel-pwm-servo-driver/
 * https://github.com/adafruit/Adafruit_CircuitPython_PCA9685
 * https://circuitpython.readthedocs.io/projects/pca9685/en/latest/index.html
-
+* http://wiki.sunfounder.cc/index.php?title=PCA9685_16_Channel_12_Bit_PWM_Servo_Driver
 
 #### Controlling servos and ESCs
 
