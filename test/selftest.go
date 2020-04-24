@@ -7,29 +7,29 @@ import (
 	"time"
 )
 
-func servo(p *pilot.Pilot) {
+func servo(p *pilot.RaspiPilot) {
 	p.Direction(0)
 	time.Sleep(2 * time.Second)
-	p.Direction(20)
+	p.Direction(25)
 	time.Sleep(2 * time.Second)
-	p.Direction(-20)
+	p.Direction(-25)
 	time.Sleep(2 * time.Second)
 	p.Direction(0)
 	time.Sleep(2 * time.Second)
 }
 
-func drive(p *pilot.Pilot) {
-	throttle := 0.15
-	fmt.Printf("Setting throttle to %f\n", throttle)
-	p.Throttle(float32(throttle))
-	time.Sleep(2 * time.Second)
-
-	throttle = 0.2
+func drive(p *pilot.RaspiPilot) {
+	throttle := 0.2
 	fmt.Printf("Setting throttle to %f\n", throttle)
 	p.Throttle(float32(throttle))
 	time.Sleep(2 * time.Second)
 
 	throttle = 0.25
+	fmt.Printf("Setting throttle to %f\n", throttle)
+	p.Throttle(float32(throttle))
+	time.Sleep(2 * time.Second)
+
+	throttle = 0.30
 	fmt.Printf("Setting throttle to %f\n", throttle)
 	p.Throttle(float32(throttle))
 	time.Sleep(2 * time.Second)
@@ -42,16 +42,19 @@ func drive(p *pilot.Pilot) {
 }
 
 func main() {
-	p, err := pilot.NewPilot()
+	p, err := pilot.NewRaspiPilot()
 	if err != nil {
 		fmt.Errorf("Error initializing the pilot: %w", err)
 		os.Exit(1)
 	}
 	defer p.Shutdown()
+
+	// initialize the vehicle
 	p.Start()
+	p.BackLights(4000, true)
 
 	// test the pilot
-	// go servo(p)
+	go servo(p)
 
 	// test the esc
 	drive(p)
