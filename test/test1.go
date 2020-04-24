@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"shadow-racer/autopilot/v1/pkg/pilot"
-	"strconv"
 	"time"
 )
 
@@ -20,15 +19,26 @@ func servo(p *pilot.Pilot) {
 }
 
 func drive(p *pilot.Pilot) {
-	throttle := 0.0
-	if len(os.Args) > 1 {
-		i, _ := strconv.Atoi(os.Args[1])
-		throttle = float64(i) / 100.0
-	}
-
+	throttle := 0.15
 	fmt.Printf("Setting throttle to %f\n", throttle)
 	p.Throttle(float32(throttle))
 	time.Sleep(2 * time.Second)
+
+	throttle = 0.2
+	fmt.Printf("Setting throttle to %f\n", throttle)
+	p.Throttle(float32(throttle))
+	time.Sleep(2 * time.Second)
+
+	throttle = 0.25
+	fmt.Printf("Setting throttle to %f\n", throttle)
+	p.Throttle(float32(throttle))
+	time.Sleep(2 * time.Second)
+
+	throttle = 0.1
+	fmt.Printf("Setting throttle to %f\n", throttle)
+	p.Throttle(float32(throttle))
+	time.Sleep(3 * time.Second)
+
 }
 
 func main() {

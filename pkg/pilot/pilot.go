@@ -9,6 +9,11 @@ import (
 	"gobot.io/x/gobot/platforms/raspi"
 )
 
+const (
+	// INIT_DELAY is the time to wait until settings apply
+	INIT_DELAY = 300
+)
+
 type (
 	// Config holds basic pre-sets
 	Config struct {
@@ -30,12 +35,16 @@ type (
 		// the max the servo is allowed to rotate to each side (deg)
 		servoRangeLimit int
 
-		// min pulse length out of 4096
+		// min pulse length out of 4096, rel to escZeroPulse
 		escMinPulse int
-		// max pulse length out of 4096
+		// max pulse length out of 4096, rel to escZeroPulse
 		escMaxPulse int
 		// zero pulse length out of 4096
 		escZeroPulse int
+		// base pulse to work from
+		escBasePulse int
+		// is the pulse to reset/initialize the ESC
+		escInitPulse int
 		// esc can reverse if true
 		escCanReverse bool
 	}
@@ -105,14 +114,12 @@ func (p *Pilot) Start() error {
 	// steering to zero
 	p.Direction(0)
 	// calibrate & reset the esc
-	p.actuators.SetPWM(p.cfg.escChan, 0, uint16(p.cfg.escMaxPulse))
-	time.Sleep(200 * time.Millisecond)
-	p.actuators.SetPWM(p.cfg.escChan, 0, uint16(p.cfg.escMinPulse))
-	time.Sleep(200 * time.Millisecond)
-	p.actuators.SetPWM(p.cfg.escChan, 0, uint16(p.cfg.escZeroPulse))
-	time.Sleep(200 * time.Millisecond)
-	p.Throttle(0.0)
-	time.Sleep(200 * time.Millisecond)
+	p.actuators.SetPWM(p.cfg.escChan, uint16(p.cfg.escBasePulse), uint16(p.cfg.escInitPulse))
+	time.Sleep(INIT_DELAY * time.Millisecond)
+	p.actuators.SetPWM(p.cfg.escChan, uint16(p.cfg.escBasePulse), uint16(p.cfg.escZeroPulse))
+	time.Sleep(INIT_DELAY * time.Millisecond)
+	p.actuators.SetPWM(p.cfg.escChan, uint16(p.cfg.escBasePulse), uint16(p.cfg.escZeroPulse-20))
+	time.Sleep(INIT_DELAY * time.Millisecond)
 	// all good
 	return nil
 }
@@ -142,7 +149,13 @@ func (p *Pilot) Direction(value int) {
 // Throttle sets the motor speed
 func (p *Pilot) Throttle(value float32) {
 
+	changeOfDirection := false
+
 	if p.cfg.escCanReverse {
+		if (p.throttle > 0.0 && value <= 0.0) || (p.throttle < 0.0 && value >= 0.0) {
+			changeOfDirection = true
+		}
+
 		// can reverse
 		if value < -1.0 {
 			p.throttle = -1.0
@@ -162,21 +175,22 @@ func (p *Pilot) Throttle(value float32) {
 		}
 	}
 
-	pulseOn := p.cfg.escMinPulse
 	pulseOff := 0
-
 	if p.throttle == 0.0 {
-		pulseOn = 0
 		pulseOff = p.cfg.escZeroPulse
 	} else if p.throttle > 0.0 {
-		pulseOff = p.cfg.escZeroPulse + int(float32(p.cfg.escMaxPulse-p.cfg.escZeroPulse)*p.throttle)
+		pulseOff = p.cfg.escZeroPulse + int(float32(p.cfg.escMaxPulse)*p.throttle)
 	} else {
-		// FIXME ???
+		pulseOff = p.cfg.escZeroPulse + int(float32(p.cfg.escMinPulse)*p.throttle) // throttle < 0 -> PLUS zeroPulse
 	}
 
+	if changeOfDirection {
+		p.actuators.SetPWM(p.cfg.escChan, uint16(p.cfg.escBasePulse), uint16(p.cfg.escZeroPulse))
+		time.Sleep(INIT_DELAY * time.Millisecond)
+	}
 	// set the servo pulse
-	log.Printf("Throttle: %f => (%d,%d)", p.throttle, pulseOn, pulseOff) // FIXME remove this
-	err := p.actuators.SetPWM(p.cfg.escChan, uint16(pulseOn), uint16(pulseOff))
+	log.Printf("Throttle: %f => (%d,%d)", p.throttle, p.cfg.escBasePulse, pulseOff) // FIXME remove this
+	err := p.actuators.SetPWM(p.cfg.escChan, uint16(p.cfg.escBasePulse), uint16(pulseOff))
 	if err != nil {
 		log.Printf(err.Error())
 	}
@@ -210,10 +224,12 @@ func newConfig() *Config {
 		servoMaxRange:   180,
 		servoRangeLimit: 30,
 		// ESC
-		escMinPulse:   300,
-		escMaxPulse:   700,
-		escZeroPulse:  580,
-		escCanReverse: false,
+		escMinPulse:   100,
+		escMaxPulse:   100,
+		escBasePulse:  1000,
+		escZeroPulse:  1300,
+		escInitPulse:  2000,
+		escCanReverse: false, // it can, but does not work reliably though
 	}
 
 	return &c
