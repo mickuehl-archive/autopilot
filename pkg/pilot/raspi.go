@@ -110,6 +110,7 @@ func (p *RaspiPilot) Direction(value int) {
 	pulse := p.cfg.servoMinPulse + ((p.cfg.servoMaxPulse-p.cfg.servoMinPulse)/p.cfg.servoMaxRange)*direction
 
 	// set the servo pulse
+	//log.Printf("Direction: %d => (%d,%d)", p.steering, 0, pulse) // FIXME remove this
 	err := p.actuators.SetPWM(p.cfg.servoChan, uint16(0), uint16(pulse))
 	if err != nil {
 		log.Printf(err.Error())

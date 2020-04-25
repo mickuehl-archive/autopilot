@@ -10,9 +10,9 @@ import (
 func servo(p *pilot.RaspiPilot) {
 	p.Direction(0)
 	time.Sleep(2 * time.Second)
-	p.Direction(25)
+	p.Direction(45)
 	time.Sleep(2 * time.Second)
-	p.Direction(-25)
+	p.Direction(-45)
 	time.Sleep(2 * time.Second)
 	p.Direction(0)
 	time.Sleep(2 * time.Second)
@@ -54,10 +54,10 @@ func main() {
 	p.BackLights(4000, true)
 
 	// test the pilot
-	go servo(p)
+	servo(p)
 
 	// test the esc
-	drive(p)
+	//drive(p)
 
 	// cleanup should be done automatically
 }
