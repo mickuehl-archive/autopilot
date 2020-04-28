@@ -9,7 +9,8 @@ import (
 type (
 	// Autopilot holds all resources needed to pilot a vehicle
 	Autopilot struct {
-		obu *obu.OnboardUnit
+		//obu *obu.OnboardUnit
+		obu obu.OnboardUnit
 	}
 )
 
@@ -22,7 +23,7 @@ func init() {
 }
 
 // NewInstance creates and initializes a new autopilot instance
-func NewInstance(obu *obu.OnboardUnit) (*Autopilot, error) {
+func NewInstance(obu obu.OnboardUnit) (*Autopilot, error) {
 	ap := &Autopilot{
 		obu: obu,
 	}
@@ -37,9 +38,6 @@ func (ap *Autopilot) Initialize() error {
 		// FIXME something else?
 		return err
 	}
-	// FIXME do autopilot stuff here e.g
-	ap.obu.Direction(0)
-	ap.obu.Throttle(0)
 
 	return err
 }

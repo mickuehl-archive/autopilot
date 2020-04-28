@@ -1,9 +1,6 @@
 package parts
 
-import (
-	"shadow-racer/autopilot/v1/pkg/obu"
-)
-
+/*
 // StandardServoDirection sets the steering angle [-45,+45]
 func StandardServoDirection(obu *obu.OnboardUnit, value int) {
 	logger.Debug("StandardServoDirection", "deg", value)
@@ -30,3 +27,4 @@ func StandardServoDirection(obu *obu.OnboardUnit, value int) {
 	// set the servo pulse
 	obu.PulseFunc(obu, ch.ChannelNo, pulseOn, pulseOff)
 }
+*/

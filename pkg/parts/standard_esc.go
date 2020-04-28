@@ -1,9 +1,6 @@
 package parts
 
-import (
-	"shadow-racer/autopilot/v1/pkg/obu"
-)
-
+/*
 // StandardESCThrottle sets the motor speed [-100,+100]
 func StandardESCThrottle(obu *obu.OnboardUnit, value int) {
 	logger.Debug("StandardESCThrottle", "thr", value)
@@ -34,3 +31,4 @@ func StandardESCThrottle(obu *obu.OnboardUnit, value int) {
 	// set the ESC pulse
 	obu.PulseFunc(obu, ch.ChannelNo, pulseOn, pulseOff)
 }
+*/

@@ -8,7 +8,6 @@ import (
 	log "github.com/majordomusio/log15"
 
 	"shadow-racer/autopilot/v1/pkg/autopilot"
-	"shadow-racer/autopilot/v1/pkg/obu"
 	"shadow-racer/autopilot/v1/pkg/parts"
 )
 
@@ -20,6 +19,7 @@ func init() {
 	logger = log.New("module", "selftest")
 }
 
+/*
 // NewVirtualOBU creates a software-only OBU configration for local unit testing
 func NewVirtualOBU() *obu.OnboardUnit {
 	cfg := &obu.Config{
@@ -71,9 +71,11 @@ func VirtualOBUPulse(obu *obu.OnboardUnit, ch, min, max int) {
 	logger.Debug("VirtualOBUPulse", "channel", ch, "min_pulse", min, "max_pulse", max)
 }
 
+*/
+
 func main() {
 	// create a virtual OBU
-	obu := NewVirtualOBU()
+	obu := parts.NewVirtualOnboardUnit()
 	// standard autopilot
 	ap, err := autopilot.NewInstance(obu)
 	if err != nil {
