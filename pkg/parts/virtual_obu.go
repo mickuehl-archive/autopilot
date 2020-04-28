@@ -8,6 +8,8 @@ import (
 func NewVirtualOBU() *pilot.OnboardUnit {
 	cfg := &pilot.Config{
 		Frequency: 50,
+		Steering:  newVirtualChannel(3),
+		Drive:     newVirtualChannel(0),
 	}
 
 	obu := &pilot.OnboardUnit{
@@ -19,6 +21,17 @@ func NewVirtualOBU() *pilot.OnboardUnit {
 		PulseFunc:     VirtualOBUPulse,
 	}
 	return obu
+}
+
+func newVirtualChannel(n int) *pilot.Channel {
+	return &pilot.Channel{
+		ChannelNo: n,
+		MinPulse:  100,
+		MaxPulse:  500,
+		BasePulse: 100,
+		ZeroPulse: 300,
+		InitPulse: 2000,
+	}
 }
 
 // VirtualOBUInitialize s the pilot and all its components

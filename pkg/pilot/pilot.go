@@ -8,30 +8,34 @@ type (
 	// Channel holds the configuration for controlling
 	Channel struct {
 		// channel number
-		n int
+		ChannelNo int
 		// min pulse length out of 4096
-		minPulse int
+		MinPulse int
 		// max pulse length out of 4096
-		maxPulse int
+		MaxPulse int
 		// base puls to start from (min value)
-		basePulse int
+		BasePulse int
 		// zero pulse where the actor (e.g. servo) is in a neutral position
-		zeroPulse int
+		ZeroPulse int
 		// init pulse used to initialize/reset the channel
-		initPulse int
+		InitPulse int
 		// current min/max pulse settings
-		curMinPulse int
-		curMaxPulse int
+		CurMinPulse int
+		CurMaxPulse int
 	}
 
 	// Config holds basic pre-sets
 	Config struct {
 		Frequency int // PCA9685 clock speed
 		// actuators
-		Servo Channel
-		Esc   Channel
-		Led1  Channel
-		Led2  Channel
+		Steering *Channel
+		Drive    *Channel
+		Led1     *Channel // break
+		Led2     *Channel
+		Led3     *Channel // indicator, rear
+		Led4     *Channel
+		Led5     *Channel // indicator, front
+		Led6     *Channel
 	}
 
 	// StateFunc is a simple interface for e.g. the init function
