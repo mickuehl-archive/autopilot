@@ -17,8 +17,10 @@ type (
 		BasePulse int
 		// zero pulse where the actor (e.g. servo) is in a neutral position
 		ZeroPulse int
-		// init pulse used to initialize/reset the channel
+		// init pulse used to initialize/reset the channel. Set to -1 if not used
 		InitPulse int
+		// CustomValues allows to pass additional config parameters, e.g. range limits or trim values
+		CustomValues []int
 		// current min/max pulse settings
 		CurMinPulse int
 		CurMaxPulse int

@@ -27,6 +27,10 @@ func StandardESCThrottle(obu *pilot.OnboardUnit, value int) {
 		pulseOff = ch.ZeroPulse + int(float32(ch.MaxPulse-ch.ZeroPulse)*float32(value)/100.0)
 	}
 
+	// store the new values
+	ch.CurMinPulse = pulseOn
+	ch.CurMaxPulse = pulseOff
+
 	// set the ESC pulse
 	obu.PulseFunc(obu, ch.ChannelNo, pulseOn, pulseOff)
 }

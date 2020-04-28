@@ -4,29 +4,29 @@ import (
 	"shadow-racer/autopilot/v1/pkg/pilot"
 )
 
-const (
-	// MaxDegree is the maximum movement of the servo
-	MaxDegree = 180.0
-	// MaxRange is the allowed degree of freedom on the positive/right side. The max. value is MaxDegree / 2
-	MaxRange = 30
-	// MinRange is the allowed degree of freedom on the negative/left side. The max. value is MaxDegree / 2
-	MinRange = -30
-)
-
 // StandardServoDirection sets the steering angle [-45,+45]
 func StandardServoDirection(obu *pilot.OnboardUnit, value int) {
 	logger.Debug("StandardServoDirection", "deg", value)
 
 	ch := obu.Cfg.Steering
+	maxDegree := float32(ch.CustomValues[0])
+	maxRange := ch.CustomValues[1]
+	minRange := maxRange * -1
+	trim := ch.CustomValues[2]
 
-	if value < MinRange {
-		value = MinRange
-	} else if value > MaxRange {
-		value = MaxRange
+	pulseOn := ch.BasePulse
+	if value < minRange {
+		value = minRange
+	} else if value > maxRange {
+		value = maxRange
 	}
-	direction := (MaxDegree / 2) + value
-	pulse := ch.BasePulse + int(float32(ch.MaxPulse-ch.MinPulse)/MaxDegree*float32(direction))
+	direction := (maxDegree / 2.0) + float32(value+trim)
+	pulseOff := ch.MinPulse + int(float32(ch.MaxPulse-ch.MinPulse)/maxDegree*direction)
+
+	// store the new values
+	ch.CurMinPulse = pulseOn
+	ch.CurMaxPulse = pulseOff
 
 	// set the servo pulse
-	obu.PulseFunc(obu, ch.ChannelNo, ch.BasePulse, pulse)
+	obu.PulseFunc(obu, ch.ChannelNo, pulseOn, pulseOff)
 }

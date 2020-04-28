@@ -8,8 +8,23 @@ import (
 func NewVirtualOBU() *pilot.OnboardUnit {
 	cfg := &pilot.Config{
 		Frequency: 50,
-		Steering:  newVirtualChannel(3),
-		Drive:     newVirtualChannel(0),
+		Steering: &pilot.Channel{
+			ChannelNo:    3,
+			MinPulse:     180, // values from a real servo (MG996R)
+			MaxPulse:     590,
+			BasePulse:    100,
+			ZeroPulse:    385,
+			InitPulse:    -1,                // not used
+			CustomValues: []int{180, 30, 0}, // Max Range, Range Limit, trim
+		},
+		Drive: &pilot.Channel{
+			ChannelNo: 0,
+			MinPulse:  100, // not sure about these values
+			MaxPulse:  100,
+			BasePulse: 1000,
+			ZeroPulse: 1300,
+			InitPulse: 2000,
+		},
 	}
 
 	obu := &pilot.OnboardUnit{
@@ -21,17 +36,6 @@ func NewVirtualOBU() *pilot.OnboardUnit {
 		PulseFunc:     VirtualOBUPulse,
 	}
 	return obu
-}
-
-func newVirtualChannel(n int) *pilot.Channel {
-	return &pilot.Channel{
-		ChannelNo: n,
-		MinPulse:  100,
-		MaxPulse:  500,
-		BasePulse: 100,
-		ZeroPulse: 300,
-		InitPulse: 2000,
-	}
 }
 
 // VirtualOBUInitialize s the pilot and all its components
