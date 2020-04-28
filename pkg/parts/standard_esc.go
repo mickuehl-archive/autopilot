@@ -1,11 +1,11 @@
 package parts
 
 import (
-	"shadow-racer/autopilot/v1/pkg/pilot"
+	"shadow-racer/autopilot/v1/pkg/obu"
 )
 
 // StandardESCThrottle sets the motor speed [-100,+100]
-func StandardESCThrottle(obu *pilot.OnboardUnit, value int) {
+func StandardESCThrottle(obu *obu.OnboardUnit, value int) {
 	logger.Debug("StandardESCThrottle", "thr", value)
 
 	ch := obu.Cfg.Drive

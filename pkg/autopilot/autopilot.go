@@ -3,13 +3,13 @@ package autopilot
 import (
 	log "github.com/majordomusio/log15"
 
-	"shadow-racer/autopilot/v1/pkg/pilot"
+	"shadow-racer/autopilot/v1/pkg/obu"
 )
 
 type (
 	// Autopilot holds all resources needed to pilot a vehicle
 	Autopilot struct {
-		obu *pilot.OnboardUnit
+		obu *obu.OnboardUnit
 	}
 )
 
@@ -22,7 +22,7 @@ func init() {
 }
 
 // NewInstance creates and initializes a new autopilot instance
-func NewInstance(obu *pilot.OnboardUnit) (*Autopilot, error) {
+func NewInstance(obu *obu.OnboardUnit) (*Autopilot, error) {
 	ap := &Autopilot{
 		obu: obu,
 	}

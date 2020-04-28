@@ -1,11 +1,11 @@
 package parts
 
 import (
-	"shadow-racer/autopilot/v1/pkg/pilot"
+	"shadow-racer/autopilot/v1/pkg/obu"
 )
 
 // StandardServoDirection sets the steering angle [-45,+45]
-func StandardServoDirection(obu *pilot.OnboardUnit, value int) {
+func StandardServoDirection(obu *obu.OnboardUnit, value int) {
 	logger.Debug("StandardServoDirection", "deg", value)
 
 	ch := obu.Cfg.Steering
