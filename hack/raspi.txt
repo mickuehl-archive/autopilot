@@ -28,7 +28,7 @@ type (
 		steeringTrim int     // steering correction factor
 		throttle     float32 // motor speed, -1.0 (full reverse) to 1.0 (full speed)
 		throttleTrim float32 // motor speed trim
-		bkLights     int     // 0 .. 4000
+		bkLights     int     // 0 .. 4000. 0 = off, 4000 = max
 	}
 )
 
