@@ -1,6 +1,11 @@
 package autopilot
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	log "github.com/majordomusio/log15"
 
 	"shadow-racer/autopilot/v1/pkg/obu"
@@ -9,8 +14,13 @@ import (
 type (
 	// Autopilot holds all resources needed to pilot a vehicle
 	Autopilot struct {
-		obu  obu.OnboardUnit
-		work func()
+		// an instance of the device we are piloting
+		obu obu.OnboardUnit
+		// the main autopilot loop and control structures
+		work    func()
+		done    chan bool
+		trap    func(chan os.Signal)
+		running bool
 	}
 )
 
@@ -25,7 +35,13 @@ func init() {
 // NewInstance creates and initializes a new autopilot instance
 func NewInstance(obu obu.OnboardUnit) (*Autopilot, error) {
 	ap := &Autopilot{
-		obu: obu,
+		obu:  obu,
+		work: nil,
+		done: make(chan bool, 1),
+		trap: func(c chan os.Signal) {
+			signal.Notify(c, os.Interrupt)
+		},
+		running: false,
 	}
 	return ap, nil
 }
@@ -44,9 +60,30 @@ func (ap *Autopilot) Initialize() error {
 
 // Activate will start the autopilot
 func (ap *Autopilot) Activate() error {
-	logger.Debug("activate")
-	// FIXME do autopilot stuff here
-	ap.work()
+	logger.Info("Activating the autopilot")
+
+	if ap.work == nil {
+		ap.work = func() {}
+	}
+	go func() {
+		ap.work()
+		<-ap.done
+	}()
+	ap.running = true
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigs
+		ap.Stop()
+	}()
+
+	for {
+		time.Sleep(1 * time.Second) // FIXME check if this is ok
+		if !ap.running {
+			break
+		}
+	}
 
 	return nil
 }
@@ -54,13 +91,24 @@ func (ap *Autopilot) Activate() error {
 // Stop cancels the autopilot and stops the vehicle
 func (ap *Autopilot) Stop() error {
 	logger.Debug("stop")
+
 	// FIXME do autopilot stuff here
+
+	// signal the end of execution
+	ap.done <- true
+	ap.running = false
+
 	return nil
 }
 
 // Shutdown finalizes the autopilot and releases all resources
 func (ap *Autopilot) Shutdown() error {
 	logger.Debug("shutdown")
+
+	if ap.running {
+		ap.Stop()
+	}
+
 	err := ap.obu.Shutdown()
 	if err != nil {
 		// FIXME something else?
