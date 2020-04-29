@@ -9,8 +9,8 @@ import (
 type (
 	// Autopilot holds all resources needed to pilot a vehicle
 	Autopilot struct {
-		//obu *obu.OnboardUnit
-		obu obu.OnboardUnit
+		obu  obu.OnboardUnit
+		work func()
 	}
 )
 
@@ -46,6 +46,8 @@ func (ap *Autopilot) Initialize() error {
 func (ap *Autopilot) Activate() error {
 	logger.Debug("activate")
 	// FIXME do autopilot stuff here
+	ap.work()
+
 	return nil
 }
 
@@ -66,4 +68,10 @@ func (ap *Autopilot) Shutdown() error {
 	}
 	// FIXME do autopilot stuff here
 	return err
+}
+
+// AddWork is the main activity loop of the autopilot
+func (ap *Autopilot) AddWork(f func()) error {
+	ap.work = f
+	return nil
 }

@@ -24,7 +24,9 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-test/test
+
+# binaries that could show-up
+test/selftest/selftest
 
 # Environments
 .env

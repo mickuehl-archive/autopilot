@@ -1,11 +1,13 @@
 package parts
 
 type (
+	// VirtualOnboardUnit holds data needed to simulate an OBU
 	VirtualOnboardUnit struct {
-		//
+		// nothing yet
 	}
 )
 
+// NewVirtualOnboardUnit creates a new instance of a virtual OBU, for e.g. unit testing of the framework
 func NewVirtualOnboardUnit() *VirtualOnboardUnit {
 	obu := &VirtualOnboardUnit{}
 	return obu
