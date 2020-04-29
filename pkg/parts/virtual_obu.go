@@ -15,18 +15,18 @@ func NewVirtualOnboardUnit() *VirtualOnboardUnit {
 
 // Initialize prepares the device
 func (obu *VirtualOnboardUnit) Initialize() error {
-	logger.Debug("initialize")
+	logger.Debug("initialize the obu")
 	return nil
 }
 
 // Reset re-initializes the device
 func (obu *VirtualOnboardUnit) Reset() error {
-	logger.Debug("reset")
+	logger.Debug("reset the obu")
 	return nil
 }
 
 // Shutdown releases all resources
 func (obu *VirtualOnboardUnit) Shutdown() error {
-	logger.Debug("shutdown")
+	logger.Debug("shutdown the obu")
 	return nil
 }

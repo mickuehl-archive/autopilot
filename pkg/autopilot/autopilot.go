@@ -71,6 +71,7 @@ func (ap *Autopilot) Activate() error {
 	}()
 	ap.running = true
 
+	// wait for termination signal, e.g system kill or Ctr-C
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {

@@ -21,7 +21,11 @@ func init() {
 
 func main() {
 	// create a virtual OBU
-	obu := parts.NewVirtualOnboardUnit()
+	obu, err := parts.NewRaspiOnboardUnit()
+	if err != nil {
+		fmt.Errorf("Error initializing the OBU: %w", err)
+		os.Exit(1)
+	}
 	// standard autopilot
 	ap, err := autopilot.NewInstance(obu)
 	if err != nil {
@@ -30,19 +34,21 @@ func main() {
 	}
 	defer ap.Shutdown()
 
-	// add a VERY simplistic autopilot activity
 	testdrive := func() {
-		logger.Info("autopilot engaged")
+		logger.Info("Starting the component self-test")
+
+		obu.TailLights(4000, true)
 		time.Sleep(5 * time.Second)
-		logger.Info("autopilot done ...")
+		obu.TailLightsOff()
+
+		logger.Info("Selftest done ...")
+		ap.Stop()
 	}
 	ap.AddWork(testdrive)
 
-	// initialize the autopilot & vehicle
+	// initialize the autopilot
 	ap.Initialize()
 
 	// activate the autopilot
 	ap.Activate()
-
-	// cleanup should happen automatically
 }

@@ -32,10 +32,10 @@ func main() {
 
 	// add a VERY simplistic autopilot activity
 	testdrive := func() {
-		logger.Info("autopilot engaged")
+		logger.Info("Autopilot engaged")
 		time.Sleep(5 * time.Second)
-		logger.Info("autopilot done ...")
-		ap.Stop() // stops the execution of this process, otherwise we have to wait for a SIGTERM
+		logger.Info("Autopilot done ...")
+		ap.Stop()
 	}
 	ap.AddWork(testdrive)
 
