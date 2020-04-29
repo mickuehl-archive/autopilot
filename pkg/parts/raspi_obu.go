@@ -23,6 +23,8 @@ type (
 		// hardware
 		adaptor   *raspi.Adaptor     // the Raspi
 		actuators *i2c.PCA9685Driver // To controll actuators like servo, ESC, LEDs
+		// actuators
+		servo *StandardServo
 		// state
 		bkLights int // 0 .. 4000. 0 = off, 4000 = max
 	}
@@ -41,9 +43,31 @@ func NewRaspiOnboardUnit() (*RaspiOnboardUnit, error) {
 	}
 	pca9685.SetName("pca9685")
 
+	// the actuators
+	servo := &StandardServo{
+		MaxDegree: 180,
+		MaxRange:  30,
+		MinRange:  -30,
+		Trim:      0,
+		Direction: 0,
+		Cfg: ChannelCfg{
+			N:         3,
+			MinPulse:  180,
+			MaxPulse:  590,
+			BasePulse: 100,
+			ZeroPulse: 385,
+			InitPulse: -1,
+		},
+		Data: ChannelData{
+			N: 3,
+		},
+	}
+
+	// pull it all together
 	obu := &RaspiOnboardUnit{
 		adaptor:   r,
 		actuators: pca9685,
+		servo:     servo,
 	}
 	return obu, nil
 }
@@ -81,6 +105,30 @@ func (obu *RaspiOnboardUnit) Shutdown() error {
 
 // OBU specific functions
 
+// SetChannelPulse sets the pulse values for a channel
+func (obu *RaspiOnboardUnit) SetChannelPulse(ch, pulseOn, pulseOff int) error {
+	logger.Debug("Channel on/off pulse", "channel", ch, "on", pulseOn, "off", pulseOff)
+
+	if ch < 0 || ch > 15 {
+		return errors.New("Invalid channel")
+	}
+	if pulseOn < 0 || pulseOn > 4096 {
+		return errors.New("Invalid pulse 'on' value")
+	}
+	if pulseOff < 0 || pulseOff > 4096 {
+		return errors.New("Invalid pulse 'off' value")
+	}
+	return obu.actuators.SetPWM(ch, uint16(pulseOn), uint16(pulseOff))
+}
+
+// Direction sets the steering direction
+func (obu *RaspiOnboardUnit) Direction(value int) {
+	// expect servo to calculate the pulse values
+	obu.servo.SetAngle(value)
+	// set the values on the channel
+	obu.SetChannelPulse(obu.servo.Cfg.N, obu.servo.Data.PulseOn, obu.servo.Data.PulseOff)
+}
+
 // TailLights sets the taillights/brake lights (value = 0 off, value = 4000 max)
 func (obu *RaspiOnboardUnit) TailLights(value int, blink bool) {
 	if value < 0 {
@@ -99,11 +147,15 @@ func (obu *RaspiOnboardUnit) TailLights(value int, blink bool) {
 				return
 			}
 			for true {
-				obu.actuators.SetPWM(led1Chan, 0, uint16(obu.bkLights))
-				obu.actuators.SetPWM(led2Chan, 0, uint16(obu.bkLights))
+				obu.SetChannelPulse(led1Chan, 0, obu.bkLights)
+				obu.SetChannelPulse(led2Chan, 0, obu.bkLights)
+				//obu.actuators.SetPWM(led1Chan, 0, uint16(obu.bkLights))
+				//obu.actuators.SetPWM(led2Chan, 0, uint16(obu.bkLights))
 				time.Sleep(pause)
-				obu.actuators.SetPWM(led1Chan, 0, 0)
-				obu.actuators.SetPWM(led2Chan, 0, 0)
+				obu.SetChannelPulse(led1Chan, 0, 0)
+				obu.SetChannelPulse(led2Chan, 0, 0)
+				//obu.actuators.SetPWM(led1Chan, 0, 0)
+				//obu.actuators.SetPWM(led2Chan, 0, 0)
 				time.Sleep(pause)
 				if obu.bkLights == 0 {
 					break
@@ -111,14 +163,18 @@ func (obu *RaspiOnboardUnit) TailLights(value int, blink bool) {
 			}
 		}()
 	} else {
-		obu.actuators.SetPWM(led1Chan, 0, uint16(obu.bkLights))
-		obu.actuators.SetPWM(led2Chan, 0, uint16(obu.bkLights))
+		//obu.actuators.SetPWM(led1Chan, 0, uint16(obu.bkLights))
+		//obu.actuators.SetPWM(led2Chan, 0, uint16(obu.bkLights))
+		obu.SetChannelPulse(led1Chan, 0, obu.bkLights)
+		obu.SetChannelPulse(led2Chan, 0, obu.bkLights)
 	}
 }
 
 // TailLightsOff turns the taillights/brake lights off
 func (obu *RaspiOnboardUnit) TailLightsOff() {
 	obu.bkLights = 0
-	obu.actuators.SetPWM(led1Chan, 0, 0)
-	obu.actuators.SetPWM(led2Chan, 0, 0)
+	//obu.actuators.SetPWM(led1Chan, 0, 0)
+	//obu.actuators.SetPWM(led2Chan, 0, 0)
+	obu.SetChannelPulse(led1Chan, 0, 0)
+	obu.SetChannelPulse(led2Chan, 0, 0)
 }

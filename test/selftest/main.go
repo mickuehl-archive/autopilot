@@ -37,8 +37,19 @@ func main() {
 	testdrive := func() {
 		logger.Info("Starting the component self-test")
 
+		// activate the taillights, flashing
 		obu.TailLights(4000, true)
-		time.Sleep(5 * time.Second)
+
+		// test the servo
+		obu.Direction(0)
+		time.Sleep(1 * time.Second)
+		obu.Direction(30)
+		time.Sleep(1 * time.Second)
+		obu.Direction(-30)
+		time.Sleep(1 * time.Second)
+		obu.Direction(0)
+
+		//time.Sleep(5 * time.Second)
 		obu.TailLightsOff()
 
 		logger.Info("Selftest done ...")
