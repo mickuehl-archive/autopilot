@@ -70,10 +70,12 @@ func (obu *RaspiOnboardUnit) Initialize() error {
 	obu.actuators.SetPWMFreq(float32(frequency))
 
 	// calibrate & reset the esc
-	obu.SetChannelPulse(obu.esc.Cfg.N, obu.esc.Cfg.BasePulse, obu.esc.Cfg.InitPulse)
-	time.Sleep(500 * time.Millisecond)
-	obu.SetChannelPulse(obu.esc.Cfg.N, obu.esc.Cfg.BasePulse, obu.esc.Cfg.ZeroPulse)
-	time.Sleep(500 * time.Millisecond)
+	if obu.esc.Cfg.InitPulse > 0 {
+		obu.SetChannelPulse(obu.esc.Cfg.N, obu.esc.Cfg.BasePulse, obu.esc.Cfg.InitPulse)
+		time.Sleep(500 * time.Millisecond)
+		obu.SetChannelPulse(obu.esc.Cfg.N, obu.esc.Cfg.BasePulse, obu.esc.Cfg.ZeroPulse)
+		time.Sleep(500 * time.Millisecond)
+	}
 
 	return nil
 }
