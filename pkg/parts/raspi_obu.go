@@ -46,46 +46,12 @@ func NewRaspiOnboardUnit() (*RaspiOnboardUnit, error) {
 	}
 	pca9685.SetName("pca9685")
 
-	// the actuators
-	servo := &StandardServo{
-		MaxDegree: 180,
-		MaxRange:  30,
-		MinRange:  -30,
-		Trim:      0,
-		Direction: 0,
-		Cfg: ChannelCfg{
-			N:         steeringChan,
-			MinPulse:  180,
-			MaxPulse:  590,
-			BasePulse: 100,
-			ZeroPulse: 385,
-			InitPulse: -1,
-		},
-		Data: ChannelData{
-			N: steeringChan,
-		},
-	}
-	esc := &StandardSpeedController{
-		Throttle: 0,
-		Cfg: ChannelCfg{
-			N:         throttleChan,
-			MinPulse:  1000, // not sure
-			MaxPulse:  1400, // not sure
-			BasePulse: 1000,
-			ZeroPulse: 1300,
-			InitPulse: 2000,
-		},
-		Data: ChannelData{
-			N: throttleChan,
-		},
-	}
-
 	// pull it all together
 	obu := &RaspiOnboardUnit{
 		adaptor:   r,
 		actuators: pca9685,
-		servo:     servo,
-		esc:       esc,
+		servo:     NewBMS390DMH(steeringChan),
+		esc:       NewWP40(throttleChan),
 	}
 	return obu, nil
 }

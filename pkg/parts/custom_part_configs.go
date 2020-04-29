@@ -1,0 +1,63 @@
+package parts
+
+// NewBMS390DMH creates an instance of a BMS390DMH servo
+func NewBMS390DMH(n int) *StandardServo {
+	return &StandardServo{
+		MaxDegree: 120,
+		MaxRange:  30,
+		MinRange:  -30,
+		Trim:      0,
+		Direction: 0,
+		Cfg: ChannelCfg{
+			N:         n,
+			MinPulse:  1200,
+			MaxPulse:  1400,
+			BasePulse: 1000,
+			ZeroPulse: 1300,
+			InitPulse: -1,
+		},
+		Data: ChannelData{
+			N: n,
+		},
+	}
+}
+
+// NewMG996R creates an instance of a MG996R servo
+func NewMG996R(n int) *StandardServo {
+	return &StandardServo{
+		MaxDegree: 180,
+		MaxRange:  30,
+		MinRange:  -30,
+		Trim:      0,
+		Direction: 0,
+		Cfg: ChannelCfg{
+			N:         n,
+			MinPulse:  180,
+			MaxPulse:  590,
+			BasePulse: 100,
+			ZeroPulse: 385,
+			InitPulse: -1,
+		},
+		Data: ChannelData{
+			N: n,
+		},
+	}
+}
+
+// NewWP40 creates an instance of a Reely WP40 speed controller
+func NewWP40(n int) *StandardSpeedController {
+	return &StandardSpeedController{
+		Throttle: 0,
+		Cfg: ChannelCfg{
+			N:         n,
+			MinPulse:  1000, // not sure
+			MaxPulse:  1400, // not sure
+			BasePulse: 1000,
+			ZeroPulse: 1300,
+			InitPulse: 2000,
+		},
+		Data: ChannelData{
+			N: n,
+		},
+	}
+}
