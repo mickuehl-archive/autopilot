@@ -1,14 +1,23 @@
-.PHONY = all test deploy
+.PHONY = all clean tests deploy
 
-PLATFORM = GOARM=7 GOARCH=arm GOOS=linux
+PLATFORM_ARM = GOARM=7 GOARCH=arm GOOS=linux
 
-all: test calibrate deploy
+all: tests calibrate deploy
+
+clean:
+	rm bin/calibrate bin/selftest bin/unittest
+
+tests: unittest selftest
 
 calibrate: cmd/calibrate/main.go
-	${PLATFORM} go build -o bin/calibrate cmd/calibrate/main.go
+	cd cmd/calibrate && ${PLATFORM_ARM} go build -o ../../bin/calibrate main.go
+	
+unittest: test/unittest/main.go
+	go build -o bin/unittest test/unittest/main.go
 
-test: test/selftest.go pkg/pilot/pilot.go pkg/pilot/raspi.go
-	${PLATFORM} go build -o bin/selftest test/selftest.go
+selftest: test/selftest/main.go
+	${PLATFORM_ARM} go build -o bin/selftest test/selftest/main.go
 
 deploy:
-	scp -i ${PI_KEY} -r bin/* cloud@${PI_TARGET}:/home/cloud/
+	scp -i ${PI_KEY} -r bin/calibrate cloud@${PI_TARGET}:/home/cloud/
+	scp -i ${PI_KEY} -r bin/selftest cloud@${PI_TARGET}:/home/cloud/

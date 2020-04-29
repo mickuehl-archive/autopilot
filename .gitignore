@@ -27,6 +27,7 @@ MANIFEST
 
 # binaries that could show-up
 test/selftest/selftest
+test/unittest/unittest
 
 # Environments
 .env
