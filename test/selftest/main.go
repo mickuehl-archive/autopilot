@@ -49,6 +49,14 @@ func main() {
 		time.Sleep(1 * time.Second)
 		obu.Direction(0)
 
+		// test the ESC
+		obu.Throttle(20)
+		time.Sleep(1 * time.Second)
+		obu.Throttle(25)
+		time.Sleep(1 * time.Second)
+		obu.Throttle(0)
+		time.Sleep(1 * time.Second)
+
 		//time.Sleep(5 * time.Second)
 		obu.TailLightsOff()
 

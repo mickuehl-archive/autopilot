@@ -26,6 +26,9 @@ func (s *StandardServo) SetAngle(value int) {
 	} else if value > s.MaxRange {
 		value = s.MaxRange
 	}
+	s.Direction = value // write the sanitized value back
+
+	// calculate the OFF value
 	deg := (float32(s.MaxDegree) / 2.0) + float32(value+s.Trim)
 	s.Data.PulseOff = s.Cfg.MinPulse + int(float32(s.Cfg.MaxPulse-s.Cfg.MinPulse)/float32(s.MaxDegree)*deg)
 }
