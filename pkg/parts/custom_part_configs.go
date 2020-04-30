@@ -16,9 +16,6 @@ func NewBMS390DMH(n int) *StandardServo {
 			ZeroPulse: 1300,
 			InitPulse: -1,
 		},
-		Data: ChannelData{
-			N: n,
-		},
 	}
 }
 
@@ -38,9 +35,6 @@ func NewMG996R(n int) *StandardServo {
 			ZeroPulse: 385,
 			InitPulse: -1,
 		},
-		Data: ChannelData{
-			N: n,
-		},
 	}
 }
 
@@ -55,9 +49,6 @@ func NewWP40(n int) *StandardSpeedController {
 			BasePulse: 1000,
 			ZeroPulse: 1300,
 			InitPulse: 2000,
-		},
-		Data: ChannelData{
-			N: n,
 		},
 	}
 }

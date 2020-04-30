@@ -40,4 +40,5 @@ venv.bak/
 
 # IDE etc
 .vscode/
+.DS_Store
 stuff.md

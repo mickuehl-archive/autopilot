@@ -11,16 +11,16 @@ type (
 		// servo state
 		Direction int
 		// hardware config and values
-		Cfg  ChannelCfg
-		Data ChannelData
+		Cfg ChannelCfg
 	}
 )
 
 // SetAngle sets the servo angle
-func (s *StandardServo) SetAngle(value int) {
+func (s *StandardServo) SetAngle(value int) (int, int) {
 	logger.Debug("StandardServo", "deg", value)
 
-	s.Data.PulseOn = s.Cfg.BasePulse
+	on := s.Cfg.BasePulse
+	off := 0
 	if value < s.MinRange {
 		value = s.MinRange
 	} else if value > s.MaxRange {
@@ -30,7 +30,9 @@ func (s *StandardServo) SetAngle(value int) {
 
 	// calculate the OFF value
 	deg := (float32(s.MaxDegree) / 2.0) + float32(value+s.Trim)
-	s.Data.PulseOff = s.Cfg.MinPulse + int(float32(s.Cfg.MaxPulse-s.Cfg.MinPulse)/float32(s.MaxDegree)*deg)
+	off = s.Cfg.MinPulse + int(float32(s.Cfg.MaxPulse-s.Cfg.MinPulse)/float32(s.MaxDegree)*deg)
+
+	return on, off
 }
 
 // GetAngle returns the current steering direction

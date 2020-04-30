@@ -6,13 +6,12 @@ type (
 		// -100 .. +100
 		Throttle int
 		// hardware config and values
-		Cfg  ChannelCfg
-		Data ChannelData
+		Cfg ChannelCfg
 	}
 )
 
 // SetThrottle set the throttle
-func (esc *StandardSpeedController) SetThrottle(value int) {
+func (esc *StandardSpeedController) SetThrottle(value int) (int, int) {
 	logger.Debug("StandardSpeedController", "throttle", value)
 
 	if value < -100 {
@@ -22,14 +21,18 @@ func (esc *StandardSpeedController) SetThrottle(value int) {
 	}
 	esc.Throttle = value // write the sanitized value back
 
+	on := 0
+	off := 0
+
 	if value == 0 {
-		esc.Data.PulseOn = 0
-		esc.Data.PulseOff = esc.Cfg.ZeroPulse
+		off = esc.Cfg.ZeroPulse
 	} else {
 		// ignore reversing for now
-		esc.Data.PulseOn = esc.Cfg.BasePulse
-		esc.Data.PulseOff = esc.Cfg.ZeroPulse + int(float32(esc.Cfg.MaxPulse-esc.Cfg.ZeroPulse)*float32(value)/100.0)
+		on = esc.Cfg.BasePulse
+		off = esc.Cfg.ZeroPulse + int(float32(esc.Cfg.MaxPulse-esc.Cfg.ZeroPulse)*float32(value)/100.0)
 	}
+
+	return on, off
 }
 
 // GetThrottle returns the current throttle value

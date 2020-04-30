@@ -19,13 +19,4 @@ type (
 		// init pulse used to initialize/reset the channel. Set to -1 if not used
 		InitPulse int
 	}
-
-	// ChannelData represents the current channel settings
-	ChannelData struct {
-		// channel number
-		N int
-		// current pulse settings
-		PulseOn  int
-		PulseOff int
-	}
 )

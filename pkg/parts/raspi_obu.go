@@ -116,17 +116,17 @@ func (obu *RaspiOnboardUnit) SetChannelPulse(ch, pulseOn, pulseOff int) error {
 // Direction sets the steering direction
 func (obu *RaspiOnboardUnit) Direction(value int) {
 	// expect servo to calculate the pulse values
-	obu.servo.SetAngle(value)
+	on, off := obu.servo.SetAngle(value)
 	// set the values on the channel
-	obu.SetChannelPulse(obu.servo.Cfg.N, obu.servo.Data.PulseOn, obu.servo.Data.PulseOff)
+	obu.SetChannelPulse(obu.servo.Cfg.N, on, off)
 }
 
 // Throttle sets the speed
 func (obu *RaspiOnboardUnit) Throttle(value int) {
 	// expect ESC to calculate the pulse values
-	obu.esc.SetThrottle(value)
+	on, off := obu.esc.SetThrottle(value)
 	// set the values on the channel
-	obu.SetChannelPulse(obu.esc.Cfg.N, obu.esc.Data.PulseOn, obu.esc.Data.PulseOff)
+	obu.SetChannelPulse(obu.esc.Cfg.N, on, off)
 }
 
 // TailLights sets the taillights/brake lights (value = 0 off, value = 4000 max)
