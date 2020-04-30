@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"time"
 
 	log "github.com/majordomusio/log15"
 
 	"shadow-racer/autopilot/v1/pkg/autopilot"
+	"shadow-racer/autopilot/v1/pkg/eventbus"
 	"shadow-racer/autopilot/v1/pkg/parts"
 )
 
@@ -20,6 +22,8 @@ func init() {
 }
 
 func main() {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
 	// create a virtual OBU
 	obu := parts.NewVirtualOnboardUnit()
 	// standard autopilot
@@ -33,7 +37,12 @@ func main() {
 	// add a VERY simplistic autopilot activity
 	testdrive := func() {
 		logger.Info("Autopilot engaged")
-		time.Sleep(5 * time.Second)
+
+		for i := 0; i < 10; i++ {
+			eventbus.InstanceOf().Publish("obu/steering", r.Intn(30))
+		}
+
+		time.Sleep(10 * time.Second)
 		logger.Info("Autopilot done ...")
 		ap.Stop()
 	}
