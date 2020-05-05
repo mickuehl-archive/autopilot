@@ -3,17 +3,17 @@ package parts
 // NewBMS390DMH creates an instance of a BMS390DMH servo
 func NewBMS390DMH(n int) *StandardServo {
 	return &StandardServo{
-		MaxDegree: 120,
+		MaxDegree: 60,
 		MaxRange:  30,
 		MinRange:  -30,
-		Trim:      0,
+		Trim:      3,
 		Direction: 0,
 		Cfg: ChannelCfg{
 			N:         n,
-			MinPulse:  1200,
-			MaxPulse:  1400,
+			MinPulse:  1230,
+			MaxPulse:  1350,
 			BasePulse: 1000,
-			ZeroPulse: 1300,
+			ZeroPulse: 1290,
 			InitPulse: -1,
 		},
 	}
