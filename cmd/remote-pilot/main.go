@@ -9,9 +9,8 @@ import (
 )
 
 func main() {
-	fs := http.FileServer(http.Dir("./assets"))
-	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
-	http.HandleFunc("/", serveStatic)
+	// most basic HTTP server in golang
+	http.Handle("/", http.FileServer(http.Dir("./public")))
 
 	log.Println("Listening on :3000...")
 	err := http.ListenAndServe(":3000", nil)
