@@ -5,15 +5,19 @@
   <meta charset="utf-8">
   <title>Shadow-Racer Remote Pilot</title>
   <link type="text/css" rel="stylesheet" href="/assets/stylesheets/main.css">
-
 </head>
 
 <body>
 
-  <canvas width="640" height="360">
-    Your browser does not support HTML5 canvas
-  </canvas>
-  <div id="tracker"></div>
+  <div id="remote-pilot">
+    <div id="camera-stream">
+      <img src="http://cloudpi02:3001/stream.mjpg">
+      <canvas id="tracker-canvas" width="640px" height="480px"></canvas>
+      <div id="display-status"></div>
+      <div id="display-xrel"></div>
+      <div id="display-yrel"></div>
+    </div>
+  </div>
 
   <script src="/assets/javascript/app.js"></script>
 </body>

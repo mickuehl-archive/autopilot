@@ -1,30 +1,59 @@
 html, body {
 	margin: 0;
 	padding: 0;
+	background-color: #fcfcfc;
 }
 
 html {
 	font-family: sans-serif;
 }
 
-canvas {
-	display: block;
+
+#remote-pilot {
+	width: 100%;
+	margin-top: 40px;
+}
+
+#camera-stream {
+	/*position: relative;*/
+	display: table;
 	margin: 0 auto;
-	border: 1px solid black;
 }
 
-.information {
+#camera-stream img {
 	width: 640px;
-	margin: 0 auto 50px;
+	height: 480px;
+	margin-top: 1px;
+	border: 2px solid black;
 }
 
-#tracker {
+#camera-stream canvas {
 	position: absolute;
-	top: 0;
-	right: 10px;
-	background-color: white;
+	display: table;
+	margin: 0 auto;
+	top: 41px;
 }
 
-h1 {
-	font-size: 200%;
+#display-xrel {
+	font-size: small;
+	position: relative;
+	color: white;
+	left: 550px;
+	bottom: 45px;
+}
+
+#display-yrel {
+	font-size: small;
+	position: relative;
+	color: white;
+	left: 550px;
+	bottom: 45px;
+}
+
+#display-status {
+	font-size: small;
+	position: relative;
+	color: white;
+	left: 550px;
+	bottom: 105px;
 }
