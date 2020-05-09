@@ -29,10 +29,8 @@ function updatePosition(e) {
     state.steering = (hud.x - hud.width12) / hud.width12;
     state.throttle = -1 * ((hud.y - hud.height12) / hud.height12);
 
-
+    sendState(state);
     displayHUD(state);
-
-    //console.log(state);
 
     if (!animation) {
         animation = requestAnimationFrame(function () {
@@ -50,6 +48,7 @@ function lockChangeAlert() {
         state.mode = "STOPPED";
         document.removeEventListener("mousemove", updatePosition, false);
         resetCanvas();
+        sendState(state);
     }
 }
 
