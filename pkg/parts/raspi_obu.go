@@ -113,7 +113,7 @@ func (obu *RaspiOnboardUnit) SetChannelPulse(ch, pulseOn, pulseOff int) error {
 	return obu.actuators.SetPWM(ch, uint16(pulseOn), uint16(pulseOff))
 }
 
-// Direction sets the steering direction
+// Direction sets the steering direction (in deg)
 func (obu *RaspiOnboardUnit) Direction(value int) {
 	// expect servo to calculate the pulse values
 	on, off := obu.servo.SetAngle(value)
@@ -121,7 +121,7 @@ func (obu *RaspiOnboardUnit) Direction(value int) {
 	obu.SetChannelPulse(obu.servo.Cfg.N, on, off)
 }
 
-// Throttle sets the speed
+// Throttle sets the speed (0..100)
 func (obu *RaspiOnboardUnit) Throttle(value int) {
 	// expect ESC to calculate the pulse values
 	on, off := obu.esc.SetThrottle(value)
