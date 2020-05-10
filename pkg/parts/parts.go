@@ -5,6 +5,16 @@ import (
 )
 
 type (
+	// Part provides an interface to either a physical or logical part of the vehicle
+	Part interface {
+		// Initialize prepares the device
+		Initialize() error
+		// Reset re-initializes the device
+		Reset() error
+		// Shutdown releases all resources
+		Shutdown() error
+	}
+
 	// ChannelFunc sets the pulse values of a channel
 	ChannelFunc func(int, int, int)
 

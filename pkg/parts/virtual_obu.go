@@ -2,6 +2,7 @@ package parts
 
 import (
 	"shadow-racer/autopilot/v1/pkg/eventbus"
+	"shadow-racer/autopilot/v1/pkg/obu"
 
 	"github.com/majordomusio/commons/pkg/util"
 )
@@ -53,12 +54,12 @@ func (obu *VirtualOnboardUnit) Shutdown() error {
 }
 
 func remoteStateHandler() {
-	ch := eventbus.InstanceOf().Subscribe("remote/state")
+	ch := eventbus.InstanceOf().Subscribe("rc/state")
 	for {
 		evt := <-ch
 		state := evt.Data.(RemoteState)
 
-		hud := HUD{
+		vehicle := obu.Vehicle{
 			Mode:     state.Mode,
 			Steering: 100 * ((ServoRange / 90.0) * state.Steering),
 			Throttle: 100 * state.Throttle,
@@ -66,6 +67,6 @@ func remoteStateHandler() {
 			TS:       util.Timestamp(),
 		}
 
-		eventbus.InstanceOf().Publish("remote/hud", hud)
+		eventbus.InstanceOf().Publish("rc/vehicle", vehicle)
 	}
 }

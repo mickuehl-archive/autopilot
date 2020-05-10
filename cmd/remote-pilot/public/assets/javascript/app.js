@@ -54,13 +54,15 @@ function lockChangeAlert() {
 }
 
 // patch the camera stream source
-document.getElementById('stream-source').src = "http://" + window.location.hostname + ":3001/stream.mjpg";
+if (window.location.hostname != 'localhost') {
+    document.getElementById('stream-source').src = "http://" + window.location.hostname + ":3001/stream.mjpg";
+}
 
 // draw the canvas for the first time
 resetCanvas();
 
 // initialize the local and remote state
-sendState(state) ;
+sendState(state);
 
 // pointer lock object forking for cross browser
 
