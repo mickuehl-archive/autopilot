@@ -34,26 +34,35 @@ html {
 	top: 41px;
 }
 
-#display-xrel {
-	font-size: small;
+#hud {
+	width: 100%;
+	height: 40px;
 	position: relative;
-	color: white;
-	left: 550px;
-	bottom: 45px;
+	bottom: 70px;
+
+	background:rgba(1,1,1,0.2);
 }
 
-#display-yrel {
-	font-size: small;
-	position: relative;
-	color: white;
-	left: 550px;
-	bottom: 45px;
+#hud blockquote {
+	padding: 4px;
 }
 
-#display-status {
+.hud-text {
 	font-size: small;
-	position: relative;
 	color: white;
-	left: 550px;
-	bottom: 105px;
+}
+
+#hud-throttle {
+	position: absolute;
+	left: 45px;
+}
+
+#hud-steering {
+	position: absolute;
+	left: 120px;
+}
+
+#hud-heading {
+	position: absolute;
+	left: 200px;
 }

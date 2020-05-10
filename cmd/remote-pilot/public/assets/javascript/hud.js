@@ -5,9 +5,10 @@ var trackerCanvas = document.getElementById('tracker-canvas');
 var trackerCtx = trackerCanvas.getContext('2d');
 
 // HUD elments
-var display_xrel = document.getElementById('display-xrel');
-var display_yrel = document.getElementById('display-yrel');
-var display_status = document.getElementById('display-status');
+var hud_throttle = document.getElementById('hud-throttle');
+var hud_steering = document.getElementById('hud-steering');
+var hud_mode = document.getElementById('hud-mode');
+var hud_heading = document.getElementById('hud-heading');
 
 // state
 var hud = {
@@ -39,9 +40,11 @@ function drawTracker(x, y) {
 }
 
 function displayHUD(h) {
-    display_status.textContent = h.mode;
-    display_xrel.textContent = h.steering.toPrecision(4);
-    display_yrel.textContent = h.throttle.toPrecision(4);
+    hud_mode.textContent = h.mode;
+
+    hud_throttle.textContent = "TH: " + h.throttle.toPrecision(3) + "%";
+    hud_steering.textContent = "ST: " + h.steering.toPrecision(3) + "°";
+    hud_heading.textContent = "HEADING: " + h.heading.toPrecision(4) + "°";
 }
 
 function updateHud(data) {

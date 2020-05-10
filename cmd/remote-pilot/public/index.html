@@ -13,9 +13,16 @@
     <div id="camera-stream">
       <img src="http://cloudpi02:3001/stream.mjpg">
       <canvas id="tracker-canvas" width="640px" height="480px"></canvas>
-      <div id="display-status"></div>
-      <div id="display-xrel"></div>
-      <div id="display-yrel"></div>
+
+      <div id="hud">
+        <blockquote>
+          <div id="hud-mode" class="hud-text"></div>
+          <div id="hud-throttle" class="hud-text"></div>
+          <div id="hud-steering" class="hud-text"></div>
+          <div id="hud-heading" class="hud-text"></div>
+        </blockquote>
+      </div>
+      
     </div>
   </div>
 

@@ -60,9 +60,9 @@ func remoteStateHandler() {
 
 		hud := HUD{
 			Mode:     state.Mode,
-			Steering: (ServoRange / 90.0) * state.Steering,
+			Steering: 100 * ((ServoRange / 90.0) * state.Steering),
 			Throttle: 100 * state.Throttle,
-			Heading:  0,
+			Heading:  360,
 			TS:       util.Timestamp(),
 		}
 
