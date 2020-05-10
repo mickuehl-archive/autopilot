@@ -53,6 +53,9 @@ function lockChangeAlert() {
     }
 }
 
+// patch the camera stream source
+document.getElementById('stream-source').src = "http://" + window.location.hostname + ":3001/stream.mjpg";
+
 // draw the canvas for the first time
 resetCanvas();
 

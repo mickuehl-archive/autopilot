@@ -1,4 +1,4 @@
-.PHONY = all clean tests deploy hacks
+.PHONY = all clean tests deploy hacks remote-pilot remote-pilot-dep
 
 PLATFORM_ARM = GOARM=7 GOARCH=arm GOOS=linux
 
@@ -21,6 +21,14 @@ hacks:
 	#${PLATFORM_ARM} go build -o bin/picam test/picam/main.go
 	#scp -i ${PI_KEY} -r bin/picam cloud@${PI_TARGET}:/home/cloud/
 	scp -i ${PI_KEY} -r pkg/parts/camera/camera.py cloud@${PI_TARGET}:/home/cloud/
+
+remote-pilot: cmd/remote-pilot/main.go
+	${PLATFORM_ARM} go build -o bin/remote-pilot cmd/remote-pilot/main.go
+	scp -i ${PI_KEY} -r bin/remote-pilot cloud@${PI_TARGET}:/home/cloud/
+
+remote-pilot-dep:
+	scp -i ${PI_KEY} -r pkg/parts/camera/camera.py cloud@${PI_TARGET}:/home/cloud/
+	scp -i ${PI_KEY} -r cmd/remote-pilot/public cloud@${PI_TARGET}:/home/cloud/
 
 selftest: test/selftest/main.go
 	${PLATFORM_ARM} go build -o bin/selftest test/selftest/main.go

@@ -3,7 +3,7 @@
 var WSREADY = false;
 
 // open a connection to the vehicle
-var ws = new WebSocket("ws://localhost:3000/hud");
+var ws = new WebSocket("ws://" + window.location.hostname + ":3000/hud");
 
 // Send the local state of the pilot to the vehicle. 
 // The vehicle SHOULD reply with an update message with actual values to be 
