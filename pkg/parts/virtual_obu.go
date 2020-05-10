@@ -59,6 +59,7 @@ func remoteStateHandler() {
 		state := evt.Data.(RemoteState)
 
 		hud := HUD{
+			Mode:     state.Mode,
 			Steering: (ServoRange / 90.0) * state.Steering,
 			Throttle: 100 * state.Throttle,
 			Heading:  0,

@@ -29,8 +29,8 @@ function updatePosition(e) {
     state.steering = (hud.x - hud.width12) / hud.width12;
     state.throttle = -1 * ((hud.y - hud.height12) / hud.height12);
 
+    // update the vehicle state
     sendState(state);
-    displayHUD(state);
 
     if (!animation) {
         animation = requestAnimationFrame(function () {
@@ -43,17 +43,21 @@ function updatePosition(e) {
 function lockChangeAlert() {
     if (document.pointerLockElement === trackerCanvas || document.mozPointerLockElement === trackerCanvas) {
         state.mode = "DRIVING";
+        sendState(state);
         document.addEventListener("mousemove", updatePosition, false);
     } else {
-        state.mode = "STOPPED";
         document.removeEventListener("mousemove", updatePosition, false);
         resetCanvas();
+        state.mode = "STOPPED";
         sendState(state);
     }
 }
 
 // draw the canvas for the first time
 resetCanvas();
+
+// initialize the local and remote state
+sendState(state) ;
 
 // pointer lock object forking for cross browser
 

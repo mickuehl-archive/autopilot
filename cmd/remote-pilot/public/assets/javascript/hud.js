@@ -11,12 +11,18 @@ var display_status = document.getElementById('display-status');
 
 // state
 var hud = {
+    // local data from the browser
     width: trackerCanvas.width,
     height: trackerCanvas.height,
     width12: trackerCanvas.width / 2,
     height12: trackerCanvas.height / 2,
     x: trackerCanvas.width / 2,
-    y: trackerCanvas.height / 2
+    y: trackerCanvas.height / 2,
+    // data from the vehicle's OBU
+    steering: 0,
+    throttle: 0,
+    heading: 0,
+    mode: "STOPPED"
 }
 
 function degToRad(degrees) {
@@ -32,10 +38,20 @@ function drawTracker(x, y) {
     trackerCtx.fill();
 }
 
-function displayHUD(s) {
-    display_status.textContent = s.mode;
-    display_xrel.textContent = s.steering.toPrecision(4);
-    display_yrel.textContent = s.throttle.toPrecision(4);
+function displayHUD(h) {
+    display_status.textContent = h.mode;
+    display_xrel.textContent = h.steering.toPrecision(4);
+    display_yrel.textContent = h.throttle.toPrecision(4);
+}
+
+function updateHud(data) {
+    // unpack values from the update event
+    hud.throttle = data.th
+    hud.steering = data.st
+    hud.heading = data.head
+    hud.mode = data.mode
+    // redraw the HUD
+    displayHUD(hud)
 }
 
 function resetCanvas() {
@@ -47,5 +63,5 @@ function resetCanvas() {
     state.steering = 0;
 
     drawTracker(hud.x, hud.y);
-    displayHUD(state);
+    displayHUD(hud);
 }

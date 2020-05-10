@@ -48,7 +48,7 @@ func InstanceOf() *EventBus {
 
 // Publish sends any kind of data to a topic
 func (eb *EventBus) Publish(topic string, data interface{}) {
-	logger.Debug("Publish", "topic", topic)
+	//logger.Debug("Publish", "topic", topic) FIXME remove this
 
 	eb.rm.RLock()
 	if chans, found := eb.subscribers[topic]; found {
