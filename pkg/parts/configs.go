@@ -42,6 +42,7 @@ func NewMG996R(n int) *StandardServo {
 func NewWP40(n int) *StandardSpeedController {
 	return &StandardSpeedController{
 		Throttle: 0,
+		Limit:    100,
 		Cfg: ChannelCfg{
 			N:         n,
 			MinPulse:  1000, // not sure

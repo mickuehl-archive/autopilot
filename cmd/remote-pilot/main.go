@@ -20,8 +20,13 @@ func init() {
 
 func main() {
 
-	// create a virtual OBU
-	obu := parts.NewVirtualOnboardUnit()
+	// create a ShadowRacer OBU
+	obu, err := parts.NewRaspiOnboardUnit()
+	if err != nil {
+		fmt.Errorf("Error initializing the OBU: %w", err)
+		os.Exit(1)
+	}
+
 	// standard autopilot
 	ap, err := autopilot.NewInstance(obu)
 	if err != nil {
@@ -30,8 +35,8 @@ func main() {
 	}
 	defer ap.Shutdown()
 
-	// add a VERY simplistic autopilot activity
-	testdrive := func() {
+	// add a http server as the remote pilot
+	remotepilot := func() {
 		logger.Info("RemotePilot engaged")
 
 		err := parts.StartHTTPServer(":3000") // FIXME configuration
@@ -42,7 +47,7 @@ func main() {
 
 		logger.Info("RemotePilot disengaged")
 	}
-	ap.AddWork(testdrive)
+	ap.AddWork(remotepilot)
 
 	// initialize the autopilot & vehicle
 	ap.Initialize()

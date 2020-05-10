@@ -5,6 +5,7 @@ type (
 	StandardSpeedController struct {
 		// -100 .. +100
 		Throttle int
+		Limit    int
 		// hardware config and values
 		Cfg ChannelCfg
 	}
@@ -12,12 +13,12 @@ type (
 
 // SetThrottle set the throttle
 func (esc *StandardSpeedController) SetThrottle(value int) (int, int) {
-	logger.Debug("StandardSpeedController", "throttle", value)
+	//logger.Debug("StandardSpeedController", "throttle", value)
 
-	if value < -100 {
-		value = -100
-	} else if value > 100 {
-		value = 100
+	if value < -1*esc.Limit {
+		value = -1 * esc.Limit
+	} else if value > esc.Limit {
+		value = esc.Limit
 	}
 	esc.Throttle = value // write the sanitized value back
 

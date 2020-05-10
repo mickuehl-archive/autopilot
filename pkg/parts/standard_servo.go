@@ -17,7 +17,7 @@ type (
 
 // SetAngle sets the servo angle
 func (s *StandardServo) SetAngle(value int) (int, int) {
-	logger.Debug("StandardServo", "deg", value)
+	//logger.Debug("StandardServo", "deg", value)
 
 	on := s.Cfg.BasePulse
 	off := 0
