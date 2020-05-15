@@ -18,7 +18,7 @@ type (
 	// ChannelFunc sets the pulse values of a channel
 	ChannelFunc func(int, int, int)
 
-	// ChannelCfg holds the configuration for controlling an actuator (e.g. servo or ESC)
+	// ChannelCfg holds the configuration for controlling an actuator e.g. a servo or ESC
 	ChannelCfg struct {
 		// channel number
 		N int

@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	"shadow-racer/autopilot/v1/pkg/parts/picam/util"
+	"shadow-racer/autopilot/v1/test/picam/picam/util"
 )
 
 type (

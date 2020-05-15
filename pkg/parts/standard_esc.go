@@ -13,7 +13,6 @@ type (
 
 // SetThrottle set the throttle
 func (esc *StandardSpeedController) SetThrottle(value int) (int, int) {
-	//logger.Debug("StandardSpeedController", "throttle", value)
 
 	if value < -1*esc.Limit {
 		value = -1 * esc.Limit

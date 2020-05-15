@@ -17,9 +17,9 @@ type (
 
 	// Vehicle holds state information of a generic vehicle
 	Vehicle struct {
-		Mode     string  `json:"mode"` // some string
-		Throttle float32 `json:"th"`   // 0 .. 100
-		Steering float32 `json:"st"`   // in deg
+		Mode     string  `json:"mode"` // some string, e.g. DRIVING, STOPPED, etc
+		Throttle float32 `json:"th"`   // -100 .. 100
+		Steering float32 `json:"st"`   // in deg, 0 is straight ahead
 		Heading  float32 `json:"head"` // heading of the vehicle 0 -> North, 90 -> East ...
 		TS       int64   `json:"ts"`   // timestamp
 	}

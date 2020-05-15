@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"sync"
 	"syscall"
+	"time"
 	"unsafe"
 
 	"golang.org/x/sys/unix"
@@ -135,6 +136,10 @@ func framePump(fd int, data []byte) error {
 	// Set bit in set corresponding to file descriptor
 	fds.Bits[fd>>8] |= 1 << (uint(fd) & 63)
 
+	n := 0
+	start := time.Now().Unix()
+	var duration int64
+
 	for {
 		// Wait for frame
 		_, err := unix.Select(fd+1, &fds, nil, nil, nil)
@@ -179,6 +184,15 @@ func framePump(fd int, data []byte) error {
 		)
 		if errno != 0 {
 			return errno
+		}
+
+		// profiling
+		n = n + 1
+		duration = duration + (time.Now().Unix() - start)
+		start = time.Now().Unix()
+		if n%10 == 0 {
+			fmt.Println(float64(duration) / 10.0)
+			duration = 0
 		}
 	}
 }

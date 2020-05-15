@@ -9,6 +9,7 @@ import (
 )
 
 type (
+	// DataEvent wraps a message being published to subscribers
 	DataEvent struct {
 		Data  interface{}
 		Topic string
@@ -48,9 +49,8 @@ func InstanceOf() *EventBus {
 
 // Publish sends any kind of data to a topic
 func (eb *EventBus) Publish(topic string, data interface{}) {
-	//logger.Debug("Publish", "topic", topic) FIXME remove this
-
 	eb.rm.RLock()
+
 	if chans, found := eb.subscribers[topic]; found {
 		// this is done because the slices refer to same array even though they are passed by value
 		// thus we are creating a new slice with our elements thus preserve locking correctly.
@@ -68,7 +68,6 @@ func (eb *EventBus) Publish(topic string, data interface{}) {
 // Subscribe returns a channel that listens on topic
 func (eb *EventBus) Subscribe(topic string) DataChannel {
 	eb.rm.Lock()
-	logger.Debug("Subscribe", "topic", topic)
 
 	ch := make(chan DataEvent)
 	if prev, found := eb.subscribers[topic]; found {

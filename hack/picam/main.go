@@ -11,7 +11,7 @@ import (
 	"flag"
 	"fmt"
 
-	"shadow-racer/autopilot/v1/pkg/parts/picam"
+	"shadow-racer/autopilot/v1/test/picam/picam"
 )
 
 func main() {
