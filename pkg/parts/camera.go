@@ -19,7 +19,7 @@ func NewLiveStreamCamera(port string) *LiveStreamCamera {
 
 // Initialize prepares the camera server
 func (c *LiveStreamCamera) Initialize() error {
-	c.proc = exec.Command("nettop")
+	c.proc = exec.Command("./camera.py")
 
 	err := c.proc.Start()
 	return err
@@ -27,14 +27,19 @@ func (c *LiveStreamCamera) Initialize() error {
 
 // Reset re-initializes the camera server
 func (c *LiveStreamCamera) Reset() error {
-	err := c.proc.Process.Kill()
-	if err != nil {
-		return err
+	if c.proc.Process != nil {
+		err := c.proc.Process.Kill()
+		if err != nil {
+			return err
+		}
 	}
 	return c.Initialize()
 }
 
 // Shutdown releases all camera server resources
 func (c *LiveStreamCamera) Shutdown() error {
-	return c.proc.Process.Kill()
+	if c.proc.Process != nil {
+		return c.proc.Process.Kill()
+	}
+	return nil
 }

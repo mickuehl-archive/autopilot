@@ -27,7 +27,7 @@ remote-pilot: cmd/remote-pilot/main.go
 	scp -i ${PI_KEY} -r bin/remote-pilot cloud@${PI_TARGET}:/home/cloud/
 
 remote-pilot-dep:
-	scp -i ${PI_KEY} -r pkg/parts/camera/camera.py cloud@${PI_TARGET}:/home/cloud/
+	scp -i ${PI_KEY} -r pkg/parts/scripts/camera.py cloud@${PI_TARGET}:/home/cloud/
 	scp -i ${PI_KEY} -r cmd/remote-pilot/public cloud@${PI_TARGET}:/home/cloud/
 
 deploy:
