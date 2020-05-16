@@ -140,18 +140,6 @@ func initialize() {
 	thing = t
 }
 
-func initialize2() {
-
-	t := &board{
-		adaptor:        nil,
-		driver:         nil,
-		channels:       make([]pulse, 16),
-		defaultChannel: 0,
-	}
-
-	thing = t
-}
-
 func cleanup() {
 	thing.driver.Halt()
 	thing.driver.Connection().Finalize()

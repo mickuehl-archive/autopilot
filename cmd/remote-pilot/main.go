@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -20,26 +21,50 @@ func init() {
 
 func main() {
 
-	// create a ShadowRacer OBU
-	obu, err := parts.NewRaspiOnboardUnit()
-	if err != nil {
-		fmt.Errorf("Error initializing the OBU: %w", err)
-		os.Exit(1)
-	}
+	// command line parameters
+	var obuType string
+	var port int
 
-	// standard autopilot
-	ap, err := autopilot.NewInstance(obu)
-	if err != nil {
-		fmt.Errorf("Error initializing the autopilot: %w", err)
+	// the autopilot instance
+	var ap *autopilot.Autopilot
+
+	// get command line options
+	flag.StringVar(&obuType, "obu", "raspi", "Select an on-board unit implementation")
+	flag.IntVar(&port, "port", 3000, "Port of the remote UI and API")
+
+	flag.Parse()
+
+	// create a OBU and add it to an autopilot
+	if obuType == "raspi" {
+		// create a ShadowRacer OBU
+		obu, err := parts.NewRaspiOnboardUnit()
+		if err != nil {
+			os.Exit(1)
+		}
+
+		// standard autopilot
+		ap, err = autopilot.NewInstance(obu)
+		if err != nil {
+			os.Exit(1)
+		}
+	} else if obuType == "virtual" {
+		// create a virtual OBU for local testing
+		obu := parts.NewVirtualOnboardUnit()
+		// standard autopilot
+		ap, _ = autopilot.NewInstance(obu)
+	} else {
 		os.Exit(1)
 	}
 	defer ap.Shutdown()
+
+	// add parts to the autopilot
+	ap.AddPart("camera", parts.NewLiveStreamCamera(fmt.Sprintf(":%d", port+1)))
 
 	// add a http server as the remote pilot
 	remotepilot := func() {
 		logger.Info("RemotePilot engaged")
 
-		err := parts.StartHTTPServer(":3000") // FIXME configuration
+		err := parts.StartHTTPServer(fmt.Sprintf(":%d", port))
 		if err != nil {
 			logger.Error("RemotePilot aborted")
 			ap.Stop()

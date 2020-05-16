@@ -9,6 +9,7 @@ import (
 	log "github.com/majordomusio/log15"
 
 	"shadow-racer/autopilot/v1/pkg/obu"
+	"shadow-racer/autopilot/v1/pkg/parts"
 )
 
 type (
@@ -16,6 +17,10 @@ type (
 	Autopilot struct {
 		// an instance of the device we are piloting
 		obu obu.OnboardUnit
+
+		// additional components that are added to the autopilot
+		parts map[string]parts.Part
+
 		// the main autopilot loop and control structures
 		work    func()
 		done    chan bool
@@ -35,9 +40,10 @@ func init() {
 // NewInstance creates and initializes a new autopilot instance
 func NewInstance(obu obu.OnboardUnit) (*Autopilot, error) {
 	ap := &Autopilot{
-		obu:  obu,
-		work: nil,
-		done: make(chan bool, 1),
+		obu:   obu,
+		parts: make(map[string]parts.Part),
+		work:  nil,
+		done:  make(chan bool, 1),
 		trap: func(c chan os.Signal) {
 			signal.Notify(c, os.Interrupt)
 		},
@@ -53,6 +59,15 @@ func (ap *Autopilot) Initialize() error {
 	if err != nil {
 		// FIXME something else?
 		return err
+	}
+
+	// initialize all parts next
+	for name, p := range ap.parts {
+		logger.Info("Initializing parts", "part", name)
+		err := p.Initialize()
+		if err != nil {
+			logger.Error("Error initializing part", "part", name, "error", err.Error())
+		}
 	}
 
 	return err
@@ -91,10 +106,6 @@ func (ap *Autopilot) Activate() error {
 
 // Stop cancels the autopilot and stops the vehicle
 func (ap *Autopilot) Stop() error {
-	logger.Debug("stop")
-
-	// FIXME do autopilot stuff here
-
 	// signal the end of execution
 	ap.done <- true
 	ap.running = false
@@ -104,10 +115,18 @@ func (ap *Autopilot) Stop() error {
 
 // Shutdown finalizes the autopilot and releases all resources
 func (ap *Autopilot) Shutdown() error {
-	logger.Debug("shutdown")
 
 	if ap.running {
 		ap.Stop()
+	}
+
+	// stop all parts first
+	for name, p := range ap.parts {
+		logger.Info("Shutting down parts", "part", name)
+		err := p.Shutdown()
+		if err != nil {
+			logger.Error("Error stopping part", "part", name, "error", err.Error())
+		}
 	}
 
 	err := ap.obu.Shutdown()
@@ -122,5 +141,11 @@ func (ap *Autopilot) Shutdown() error {
 // AddWork is the main activity loop of the autopilot
 func (ap *Autopilot) AddWork(f func()) error {
 	ap.work = f
+	return nil
+}
+
+// AddPart adds an additional component to the autopilot
+func (ap *Autopilot) AddPart(name string, p parts.Part) error {
+	ap.parts[name] = p
 	return nil
 }
