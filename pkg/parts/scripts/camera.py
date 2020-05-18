@@ -3,11 +3,19 @@
 
 import io
 import time
-import picamera
 import logging
+import traceback
 import socketserver
+import argparse
+import picamera
+
 from threading import Condition
 from http import server
+from datetime import datetime
+
+
+def timestamp():
+    return int(datetime.utcnow().timestamp() * 1000000)
 
 
 class StreamingOutput(object):
@@ -15,6 +23,19 @@ class StreamingOutput(object):
         self.frame = None
         self.buffer = io.BytesIO()
         self.condition = Condition()
+        self.dir = ".cam"
+        self.recording = False
+        self.framecounter = 0
+        self.ts = timestamp()
+
+    def start_recording(self):
+        if not self.recording:
+            self.ts = timestamp()
+            self.recording = True
+
+    def stop_recording(self):
+        if self.recording:
+            self.recording = False
 
     def write(self, buf):
         if buf.startswith(b'\xff\xd8'):
@@ -25,16 +46,19 @@ class StreamingOutput(object):
                 self.frame = self.buffer.getvalue()
                 self.condition.notify_all()
             self.buffer.seek(0)
+
+            if self.recording:
+                open("{}/{}_{}.jpg".format(self.dir, self.ts,
+                                           self.framecounter), "wb").write(buf)
+
+            self.framecounter = self.framecounter + 1
+
         return self.buffer.write(buf)
 
 
 class StreamingHandler(server.BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path == '/':
-            self.send_response(301)
-            self.send_header('Location', '/stream.mjpg')
-            self.end_headers()
-        elif self.path == '/stream.mjpg':
+        if self.path == '/stream.mjpg':
             self.send_response(200)
             self.send_header('Age', 0)
             self.send_header('Cache-Control', 'no-cache, private')
@@ -42,24 +66,45 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_header(
                 'Content-Type', 'multipart/x-mixed-replace; boundary=FRAME')
             self.end_headers()
+
             try:
                 while True:
                     with output.condition:
                         output.condition.wait()
                         frame = output.frame
+
                     self.wfile.write(b'--FRAME\r\n')
                     self.send_header('Content-Type', 'image/jpeg')
                     self.send_header('Content-Length', len(frame))
                     self.end_headers()
                     self.wfile.write(frame)
                     self.wfile.write(b'\r\n')
+
             except Exception as e:
                 logging.warning(
                     'Removed streaming client %s: %s',
                     self.client_address, str(e))
+
+        elif self.path == '/':
+            self.send_response(301)
+            self.send_header('Location', '/stream.mjpg')
+            self.end_headers()
+
         else:
             self.send_error(404)
             self.end_headers()
+
+    def do_POST(self):
+        if self.path == '/start':
+            self.send_response(200)
+            output.start_recording()
+
+        elif self.path == '/stop':
+            self.send_response(200)
+            output.stop_recording()
+
+        else:
+            self.send_response(400)
 
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
@@ -67,17 +112,32 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     daemon_threads = True
 
 
-with picamera.PiCamera(resolution='1024x768', framerate=30) as camera:
-    output = StreamingOutput()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--port', dest='port', type=int, default='3001')
+    parser.add_argument('-r', '--resolution',
+                        dest='resolution', default='1024x768')
+    parser.add_argument('-f', '--fps', dest='fps', type=int, default='30')
+    parser.add_argument('-d', '--dir', dest='dir', default='.cam')
 
-    camera.start_preview()
-    time.sleep(2)
-    camera.rotation = 180
-    camera.start_recording(output, format='mjpeg')
+    args = parser.parse_args()
 
-    try:
-        address = ('', 3001)
-        server = StreamingServer(address, StreamingHandler)
-        server.serve_forever()
-    finally:
-        camera.stop_recording()
+    with picamera.PiCamera(resolution=args.resolution, framerate=args.fps) as camera:
+        output = StreamingOutput()
+        output.dir = args.dir
+
+        camera.start_preview()
+        time.sleep(2)
+        camera.rotation = 180
+        camera.start_recording(output, format='mjpeg')
+
+        try:
+            address = ('', args.port)
+            server = StreamingServer(address, StreamingHandler)
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+        except Exception as e:
+            traceback.print_exc()
+        finally:
+            camera.stop_recording()
