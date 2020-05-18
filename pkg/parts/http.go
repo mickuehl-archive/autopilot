@@ -12,10 +12,11 @@ import (
 type (
 	// RemoteState is the current driving state info
 	RemoteState struct {
-		Mode     string  `json:"mode"`
-		Throttle float32 `json:"th"`
-		Steering float32 `json:"st"`
-		TS       int64   `json:"ts"`
+		Mode      string  `json:"mode"`
+		Recording bool    `json:"recording"`
+		Throttle  float32 `json:"th"`
+		Steering  float32 `json:"st"`
+		TS        int64   `json:"ts"`
 	}
 )
 
