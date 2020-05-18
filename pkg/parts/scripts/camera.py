@@ -12,7 +12,7 @@ import picamera
 from threading import Condition
 from http import server
 from datetime import datetime
-
+from urllib.parse import parse_qs
 
 def timestamp():
     return int(datetime.utcnow().timestamp() * 1000000)
@@ -28,9 +28,12 @@ class StreamingOutput(object):
         self.framecounter = 0
         self.ts = timestamp()
 
-    def start_recording(self):
+    def start_recording(self, ts=0):
         if not self.recording:
-            self.ts = timestamp()
+            if ts == 0:
+                self.ts = timestamp()
+            else:
+                self.ts = ts
             self.recording = True
 
     def stop_recording(self):
@@ -85,18 +88,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     'Removed streaming client %s: %s',
                     self.client_address, str(e))
 
-        elif self.path == '/':
-            self.send_response(301)
-            self.send_header('Location', '/stream.mjpg')
-            self.end_headers()
-
-        else:
-            self.send_error(404)
-            self.end_headers()
-
-    def do_POST(self):
-        if self.path == '/start':
-            output.start_recording()
+        elif self.path.startswith('/start'):
+            if "?ts" in self.path:
+                output.start_recording(int(parse_qs(self.path[7:])['ts'][0]))
+            else:
+                output.start_recording()
             self.send_response(200)
             self.end_headers()
 
@@ -105,8 +101,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_response(200)
             self.end_headers()
 
+        elif self.path == '/':
+            self.send_response(301)
+            self.send_header('Location', '/stream.mjpg')
+            self.end_headers()
+
         else:
-            self.send_response(400)
+            self.send_error(404)
             self.end_headers()
 
 

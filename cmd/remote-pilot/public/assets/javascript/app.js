@@ -67,16 +67,11 @@ function handleBreak() {
 }
 
 function handleRecording() {
-    xhr = new XMLHttpRequest()
-
     if (state.recording == false) {
         state.recording = true
-        xhr.open('POST', stream_server_url + "/start", true)
     } else {
         state.recording = false
-        xhr.open('POST', stream_server_url + "/stop", true)
     }
-    xhr.send()
 }
 
 // patch the camera stream source

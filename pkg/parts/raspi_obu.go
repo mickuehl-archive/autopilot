@@ -2,7 +2,9 @@ package parts
 
 import (
 	"errors"
+	"fmt"
 	"log"
+	"net/http"
 	"sync"
 	"time"
 
@@ -66,11 +68,13 @@ func NewRaspiOnboardUnit() (*RaspiOnboardUnit, error) {
 		servo:     NewBMS390DMH(steeringChan),
 		esc:       NewWP40(throttleChan),
 		vehicle: &obu.Vehicle{
-			Mode:     stateStopped,
-			Throttle: 0.0,
-			Steering: 0.0,
-			Heading:  0.0,
-			TS:       util.Timestamp(),
+			Mode:        stateStopped,
+			Throttle:    0.0,
+			Steering:    0.0,
+			Heading:     0.0,
+			Recording:   false,
+			RecordingTS: 0,
+			TS:          util.Timestamp(),
 		},
 	}
 	// set a speed limit for now
@@ -143,14 +147,44 @@ func (o *RaspiOnboardUnit) RCStateHandler() {
 				// FIXME should not happen
 			}
 			o.vehicle.Mode = state.Mode
+			o.vehicle.Recording = state.Recording
 		} else {
 			o.vehicle.Steering = 100.0 * ((float32(o.servo.MaxRange) / 90.0) * state.Steering)
 			o.vehicle.Throttle = 100.0 * state.Throttle
 		}
+
+		if state.Recording != o.vehicle.Recording {
+			baseURL := "http://localhost:3001" // FIXME configuration
+
+			if state.Recording == true {
+				o.vehicle.RecordingTS = util.Timestamp()
+				o.vehicle.Recording = true
+
+				resp, err := http.Get(fmt.Sprintf("%s/start?ts=%d", baseURL, o.vehicle.RecordingTS))
+
+				if err != nil {
+					logger.Error("Error toggling recording", "err", err.Error())
+				} else {
+					logger.Info("Started recording", "ts", o.vehicle.RecordingTS)
+				}
+				defer resp.Body.Close()
+			} else {
+				o.vehicle.Recording = false
+				resp, err := http.Get(baseURL + "/stop")
+
+				if err != nil {
+					logger.Error("Error toggling recording", "err", err.Error())
+				} else {
+					logger.Info("Stopped recording")
+				}
+				defer resp.Body.Close()
+			}
+		}
+
 		o.vehicle.TS = util.Timestamp()
 
 		// publish the new state
-		eventbus.InstanceOf().Publish("rc/vehicle", o.vehicle)
+		eventbus.InstanceOf().Publish("rc/vehicle", o.vehicle.Clone())
 
 		// set the actuators
 		o.Direction(int(o.vehicle.Steering))
@@ -208,7 +242,6 @@ func (o *RaspiOnboardUnit) TailLights(value int, blink bool) {
 		go func() {
 			pause, err := time.ParseDuration(blinkFrequency)
 			if err != nil {
-				log.Printf(err.Error())
 				return
 			}
 			for true {

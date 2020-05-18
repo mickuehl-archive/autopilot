@@ -15,6 +15,7 @@ function sendState(s) {
             th: s.throttle,
             st: s.steering,
             mode: s.mode,
+            recording: s.recording,
             ts: Date.now()
         }
         ws.send(JSON.stringify(data))
