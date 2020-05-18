@@ -96,15 +96,18 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         if self.path == '/start':
-            self.send_response(200)
             output.start_recording()
+            self.send_response(200)
+            self.end_headers()
 
         elif self.path == '/stop':
-            self.send_response(200)
             output.stop_recording()
+            self.send_response(200)
+            self.end_headers()
 
         else:
             self.send_response(400)
+            self.end_headers()
 
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
