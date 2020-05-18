@@ -2,6 +2,7 @@
 const BORDER = 6
 
 var animation
+var stream_server_url = "http://" + window.location.hostname + ":3001" // FIXME port is hard-coded !
 
 // state
 var state = {
@@ -66,16 +67,21 @@ function handleBreak() {
 }
 
 function handleRecording() {
+    xhr = new XMLHttpRequest()
+
     if (state.recording == false) {
         state.recording = true
+        xhr.open('POST', stream_server_url + "/start", true)
     } else {
         state.recording = false
+        xhr.open('POST', stream_server_url + "/stop", true)
     }
+    xhr.send()
 }
 
 // patch the camera stream source
 if (window.location.hostname != 'localhost') {
-    document.getElementById('stream-source').src = "http://" + window.location.hostname + ":3001/stream.mjpg"
+    document.getElementById('stream-source').src = stream_server_url + "/stream.mjpg"
 }
 
 // draw the canvas for the first time
