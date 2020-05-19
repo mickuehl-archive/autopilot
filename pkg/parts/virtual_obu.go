@@ -60,11 +60,13 @@ func remoteStateHandler() {
 		state := evt.Data.(RemoteState)
 
 		vehicle := obu.Vehicle{
-			Mode:     state.Mode,
-			Steering: 100 * ((ServoRange / 90.0) * state.Steering),
-			Throttle: 100 * state.Throttle,
-			Heading:  360,
-			TS:       util.Timestamp(),
+			Mode:        state.Mode,
+			Steering:    100 * ((ServoRange / 90.0) * state.Steering),
+			Throttle:    100 * state.Throttle,
+			Heading:     360,
+			Recording:   state.Recording,
+			RecordingTS: 0, // FIXME what value should we use?
+			TS:          util.Timestamp(),
 		}
 
 		eventbus.InstanceOf().Publish("rc/vehicle", vehicle)

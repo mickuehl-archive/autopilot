@@ -47,12 +47,12 @@ type (
 	}
 )
 
-// NewRaspiOnboardUnit creates a new instance of a virtual OBU, for e.g. unit testing of the framework
+// NewRaspiOnboardUnit creates a new instance of a real OBU including actuators etc.
 func NewRaspiOnboardUnit() (*RaspiOnboardUnit, error) {
 
 	// a Raspberry Pi as the platform
 	r := raspi.NewAdaptor()
-	// a board with a PCA9685 to control servos etc
+	// a board with a PCA9685 to control servos
 	pca9685 := i2c.NewPCA9685Driver(r)
 	if pca9685 == nil {
 		log.Fatalf("Could not initialize the PCA9685 driver")
@@ -107,7 +107,7 @@ func (o *RaspiOnboardUnit) Initialize() error {
 	go o.RCStateHandler()
 
 	// all good
-	logger.Info("Vehicle is ready")
+	logger.Info("OBU is ready")
 	return nil
 }
 

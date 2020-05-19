@@ -1,2 +1,0 @@
-paho-mqtt == 1.5.0
-python-qpid-proton == 0.30.0

@@ -1,9 +1,0 @@
-#!/bin/sh
-
-#while true
-#do
-#	echo "..."
-#	sleep 10
-#done
-
-python $SCRIPT -e $ENDPOINT -id $CLIENT_ID -t $TOPIC -r $ROOT_CA_PATH -c $CERT_PATH -k $KEY_PATH $EXTRA_PARAMS
