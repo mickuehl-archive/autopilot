@@ -61,7 +61,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 
 		go func() {
 			// sender
-			ch := eventbus.InstanceOf().Subscribe("rc/vehicle")
+			ch := eventbus.InstanceOf().Subscribe("state/vehicle")
 			for {
 				vehicle := <-ch
 				data, err := json.Marshal(&vehicle)

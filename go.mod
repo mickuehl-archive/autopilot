@@ -10,4 +10,5 @@ require (
 	github.com/majordomusio/commons v1.0.1
 	github.com/majordomusio/log15 v0.0.0-20200109203555-b30bc20e4fd1
 	gobot.io/x/gobot v1.14.0
+	github.com/eclipse/paho.mqtt.golang v1.2.0
 )

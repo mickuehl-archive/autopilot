@@ -59,6 +59,7 @@ func main() {
 
 	// add parts to the autopilot
 	ap.AddPart("camera", parts.NewLiveStreamCamera(fmt.Sprintf(":%d", port+1)))
+	ap.AddPart("telemetry", parts.NewTelemetry("tcp://localhost:1883", "shadow-racer/telemetry"))
 
 	// add a http server as the remote pilot
 	remotepilot := func() {

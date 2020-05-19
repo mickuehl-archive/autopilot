@@ -184,7 +184,7 @@ func (o *RaspiOnboardUnit) RCStateHandler() {
 		o.vehicle.TS = util.Timestamp()
 
 		// publish the new state
-		eventbus.InstanceOf().Publish("rc/vehicle", o.vehicle.Clone())
+		eventbus.InstanceOf().Publish("state/vehicle", o.vehicle.Clone())
 
 		// set the actuators
 		o.Direction(int(o.vehicle.Steering))

@@ -69,6 +69,6 @@ func remoteStateHandler() {
 			TS:          util.Timestamp(),
 		}
 
-		eventbus.InstanceOf().Publish("rc/vehicle", vehicle)
+		eventbus.InstanceOf().Publish("state/vehicle", vehicle)
 	}
 }
