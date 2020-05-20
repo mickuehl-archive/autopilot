@@ -26,12 +26,7 @@ func StartHTTPServer(addr string) error {
 	http.Handle("/", http.FileServer(http.Dir("./public")))
 	http.Handle("/ws", http.HandlerFunc(wsHandler))
 
-	err := http.ListenAndServe(addr, nil)
-	if err != nil {
-		logger.Error("Error", "msg", err.Error())
-	}
-
-	return err
+	return http.ListenAndServe(addr, nil)
 }
 
 func wsHandler(w http.ResponseWriter, r *http.Request) {

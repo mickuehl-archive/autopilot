@@ -66,7 +66,7 @@ func (ap *Autopilot) Initialize() error {
 		logger.Info("Initializing parts", "part", name)
 		err := p.Initialize()
 		if err != nil {
-			logger.Error("Error initializing part", "part", name, "error", err.Error())
+			logger.Error("Error initializing part", "part", name, "err", err.Error())
 		}
 	}
 
@@ -125,7 +125,7 @@ func (ap *Autopilot) Shutdown() error {
 		logger.Info("Shutting down parts", "part", name)
 		err := p.Shutdown()
 		if err != nil {
-			logger.Error("Error stopping part", "part", name, "error", err.Error())
+			logger.Error("Error stopping part", "part", name, "err", err.Error())
 		}
 	}
 

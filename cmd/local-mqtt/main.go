@@ -30,7 +30,7 @@ func shutdownHandler() {
 	logger.Info("Shutting down")
 
 	if token := cl.Unsubscribe(queue); token.Wait() && token.Error() != nil {
-		logger.Error("Error unsubscribing", "err", token.Error())
+		logger.Error("Error unsubscribing from queue", "err", token.Error())
 		os.Exit(1)
 	}
 	cl.Disconnect(250)
@@ -63,11 +63,12 @@ func main() {
 	// create a client
 	cl = mqtt.NewClient(opts)
 	if token := cl.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
+		logger.Error("Error connecting to broker", "err", token.Error())
+		os.Exit(1)
 	}
 
 	if token := cl.Subscribe(queue, 0, nil); token.Wait() && token.Error() != nil {
-		logger.Error("Error subscribing", "err", token.Error())
+		logger.Error("Error subscribing to queue", "err", token.Error())
 		os.Exit(1)
 	}
 

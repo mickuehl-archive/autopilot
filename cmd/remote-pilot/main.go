@@ -67,7 +67,7 @@ func main() {
 
 		err := parts.StartHTTPServer(fmt.Sprintf(":%d", port))
 		if err != nil {
-			logger.Error("RemotePilot aborted")
+			logger.Error("Error starting the HTTP listener", "err", err.Error())
 			ap.Stop()
 		}
 
