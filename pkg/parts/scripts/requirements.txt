@@ -1,0 +1,7 @@
+picamera == 1.13
+Adafruit-PCA9685 == 1.0.1
+adafruit-circuitpython-pca9685 == 3.3.1
+adafruit-circuitpython-motor == 3.1.1
+adafruit-circuitpython-bno055 == 4.2.1
+Adafruit-PlatformDetect == 2.6.0
+paho-mqtt == 1.5.0

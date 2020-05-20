@@ -20,6 +20,10 @@ func NewLiveStreamCamera(port string) *LiveStreamCamera {
 // Initialize prepares the camera server
 func (c *LiveStreamCamera) Initialize() error {
 	c.proc = exec.Command("./camera.py")
+	//stderr, err := cmd.StderrPipe()
+	//if err != nil {
+	//	return err
+	//}
 
 	err := c.proc.Start()
 	return err

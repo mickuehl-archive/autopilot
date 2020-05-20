@@ -24,6 +24,7 @@ func NewTelemetry(broker, queue string) *Telemetry {
 	opts := mqtt.NewClientOptions().AddBroker(broker).SetClientID("telemetry") // FIXME unique id per obu
 	opts.SetKeepAlive(2 * time.Second)
 	opts.SetPingTimeout(1 * time.Second)
+
 	// create a client
 	c := mqtt.NewClient(opts)
 	if token := c.Connect(); token.Wait() && token.Error() != nil {

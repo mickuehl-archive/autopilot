@@ -8,11 +8,15 @@ import traceback
 import socketserver
 import argparse
 import picamera
+import paho.mqtt.client as mqtt
+import json
+import base64
 
 from threading import Condition
 from http import server
 from datetime import datetime
 from urllib.parse import parse_qs
+
 
 def timestamp():
     return int(datetime.utcnow().timestamp() * 1000000)
@@ -27,6 +31,10 @@ class StreamingOutput(object):
         self.recording = False
         self.framecounter = 0
         self.ts = timestamp()
+        # MQTT
+        self.mqttc = mqtt.Client()
+        self.mqttc.connect("192.168.8.117", 1883, 60)  # FIXME configuration
+        self.mqttc.loop_start()
 
     def start_recording(self, ts=0):
         if not self.recording:
@@ -51,8 +59,12 @@ class StreamingOutput(object):
             self.buffer.seek(0)
 
             if self.recording:
-                open("{}/{}_{}.jpg".format(self.dir, self.ts,
-                                           self.framecounter), "wb").write(buf)
+                # FIXME configuration of the queue
+
+                self.mqttc.publish("shadow-racer/telemetry", json.dumps(
+                    {"deviceid": "shadow-racer", "batch": self.ts, "order": self.framecounter, "ts": timestamp(), "data": {"type": "image", "blob": str(base64.b64encode(buf), 'utf-8')}}), qos=0)
+                # open("{}/{}_{}.jpg".format(self.dir, self.ts,
+                #                           self.framecounter), "wb").write(buf)
 
             self.framecounter = self.framecounter + 1
 
