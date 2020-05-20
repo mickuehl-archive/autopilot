@@ -1,12 +1,13 @@
 package parts
 
 import (
-	"fmt"
-	"shadow-racer/autopilot/v1/pkg/eventbus"
-	"shadow-racer/autopilot/v1/pkg/obu"
+	"encoding/json"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+
+	"shadow-racer/autopilot/v1/pkg/eventbus"
+	"shadow-racer/autopilot/v1/pkg/obu"
 )
 
 type (
@@ -56,11 +57,15 @@ func (t *Telemetry) sendData() {
 	ch := eventbus.InstanceOf().Subscribe("state/vehicle")
 	for {
 		evt := <-ch
-		vehicle := evt.Data.(obu.Vehicle)
+		vehicle := evt.Data.(*obu.Vehicle)
 
 		if vehicle.Recording {
-			payload := fmt.Sprintf("%d,%f,%f", vehicle.TS, vehicle.Throttle, vehicle.Steering)
-			t.cl.Publish(t.queue, 0, false, payload)
+			payload, err := json.Marshal(vehicle.ToDataFrame())
+			if err == nil {
+				t.cl.Publish(t.queue, 0, false, payload)
+			} else {
+				logger.Error("Error marshalling data", "err", err.Error())
+			}
 		}
 	}
 }

@@ -1,6 +1,11 @@
 package obu
 
 import (
+	"fmt"
+	"shadow-racer/autopilot/v1/pkg/telemetry"
+	"strconv"
+
+	"github.com/majordomusio/commons/pkg/util"
 	log "github.com/majordomusio/log15"
 )
 
@@ -46,4 +51,43 @@ func (v *Vehicle) Clone() *Vehicle {
 		RecordingTS: v.RecordingTS,
 		TS:          v.TS,
 	}
+}
+
+// ToDataFrame converts a vehicle state struct into a dataframe
+func (v *Vehicle) ToDataFrame() *telemetry.DataFrame {
+	df := telemetry.DataFrame{
+		DeviceID: "shadow-racer",
+		Batch:    v.RecordingTS,
+		Order:    v.TS,
+		TS:       util.Timestamp(),
+		Data:     make(map[string]string),
+	}
+	df.Data["mode"] = v.Mode
+	df.Data["th"] = fmt.Sprintf("%f", v.Throttle)
+	df.Data["st"] = fmt.Sprintf("%f", v.Steering)
+	df.Data["head"] = fmt.Sprintf("%f", v.Heading)
+	df.Data["recording_ts"] = fmt.Sprintf("%d", v.RecordingTS)
+	df.Data["ts"] = fmt.Sprintf("%d", v.TS)
+
+	return &df
+}
+
+// ToVehicle creates an instance of vehicle state
+func ToVehicle(df *telemetry.DataFrame) *Vehicle {
+	v := Vehicle{
+		Mode:      df.Data["mode"],
+		Recording: true,
+	}
+	f, _ := strconv.ParseFloat(df.Data["th"], 32)
+	v.Throttle = float32(f)
+	f, _ = strconv.ParseFloat(df.Data["st"], 32)
+	v.Steering = float32(f)
+	f, _ = strconv.ParseFloat(df.Data["head"], 32)
+	v.Heading = float32(f)
+	i, _ := strconv.ParseInt(df.Data["ts"], 10, 64)
+	v.TS = i
+	i, _ = strconv.ParseInt(df.Data["recording_ts"], 10, 64)
+	v.RecordingTS = i
+
+	return &v
 }

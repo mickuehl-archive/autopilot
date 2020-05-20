@@ -24,6 +24,8 @@ func main() {
 	// command line parameters
 	var obuType string
 	var port int
+	var broker string
+	var queue string
 
 	// the autopilot instance
 	var ap *autopilot.Autopilot
@@ -31,6 +33,8 @@ func main() {
 	// get command line options
 	flag.StringVar(&obuType, "obu", "raspi", "Select an on-board unit implementation")
 	flag.IntVar(&port, "port", 3000, "Port of the remote UI and API")
+	flag.StringVar(&broker, "b", "tcp://localhost:1883", "MQTT Broker endpoint")
+	flag.StringVar(&queue, "q", "shadow-racer/telemetry", "Default queue for telemetry data")
 
 	flag.Parse()
 
@@ -59,7 +63,7 @@ func main() {
 
 	// add parts to the autopilot
 	ap.AddPart("camera", parts.NewLiveStreamCamera(fmt.Sprintf(":%d", port+1)))
-	ap.AddPart("telemetry", parts.NewTelemetry("tcp://localhost:1883", "shadow-racer/telemetry"))
+	ap.AddPart("telemetry", parts.NewTelemetry(broker, queue))
 
 	// add a http server as the remote pilot
 	remotepilot := func() {

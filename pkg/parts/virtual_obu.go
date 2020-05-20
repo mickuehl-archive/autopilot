@@ -65,10 +65,10 @@ func remoteStateHandler() {
 			Throttle:    100 * state.Throttle,
 			Heading:     360,
 			Recording:   state.Recording,
-			RecordingTS: 0, // FIXME what value should we use?
+			RecordingTS: util.Timestamp(),
 			TS:          util.Timestamp(),
 		}
 
-		eventbus.InstanceOf().Publish("state/vehicle", vehicle)
+		eventbus.InstanceOf().Publish("state/vehicle", &vehicle)
 	}
 }

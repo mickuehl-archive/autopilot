@@ -1,19 +1,17 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"os"
 	"os/signal"
+	"shadow-racer/autopilot/v1/pkg/telemetry"
 	"syscall"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	log "github.com/majordomusio/log15"
 )
-
-var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-	logger.Debug("Rcvd", "topic", msg.Topic(), "msg", msg.Payload())
-}
 
 var (
 	broker string
@@ -37,7 +35,7 @@ func shutdownHandler() {
 }
 
 func workerHandler() {
-	logger.Debug("worker")
+	// FIXME do periodic work
 }
 
 func main() {
@@ -57,7 +55,6 @@ func main() {
 	// setup and configuration
 	opts := mqtt.NewClientOptions().AddBroker(broker).SetClientID("mqtt-local")
 	opts.SetKeepAlive(2 * time.Second)
-	opts.SetDefaultPublishHandler(f)
 	opts.SetPingTimeout(1 * time.Second)
 
 	// create a client
@@ -67,7 +64,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if token := cl.Subscribe(queue, 0, nil); token.Wait() && token.Error() != nil {
+	if token := cl.Subscribe(queue, 0, receiveDataFrame); token.Wait() && token.Error() != nil {
 		logger.Error("Error subscribing to queue", "err", token.Error())
 		os.Exit(1)
 	}
@@ -79,5 +76,16 @@ func main() {
 	for {
 		<-backgroundChannel
 		workerHandler()
+	}
+}
+
+func receiveDataFrame(client mqtt.Client, msg mqtt.Message) {
+	var df telemetry.DataFrame
+
+	err := json.Unmarshal(msg.Payload(), &df)
+	if err == nil {
+		logger.Debug("dataframe", "data", df)
+	} else {
+		logger.Error("Error unmarshalling a dataframe", "err", err.Error())
 	}
 }
