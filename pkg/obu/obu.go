@@ -59,7 +59,7 @@ func (v *Vehicle) ToDataFrame() *telemetry.DataFrame {
 		DeviceID: "shadow-racer",
 		Batch:    v.RecordingTS,
 		N:        v.TS,
-		TS:       util.Timestamp(),
+		TS:       util.TimestampNano(),
 		Type:     telemetry.KV,
 		Data:     make(map[string]string),
 	}

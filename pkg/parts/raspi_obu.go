@@ -74,7 +74,7 @@ func NewRaspiOnboardUnit() (*RaspiOnboardUnit, error) {
 			Heading:     0.0,
 			Recording:   false,
 			RecordingTS: 0,
-			TS:          util.Timestamp(),
+			TS:          util.TimestampNano(),
 		},
 	}
 	// set a speed limit for now
@@ -181,7 +181,7 @@ func (o *RaspiOnboardUnit) RCStateHandler() {
 			}
 		}
 
-		o.vehicle.TS = util.Timestamp()
+		o.vehicle.TS = util.TimestampNano()
 
 		// publish the new state
 		eventbus.InstanceOf().Publish("state/vehicle", o.vehicle.Clone())

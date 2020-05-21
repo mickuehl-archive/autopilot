@@ -31,7 +31,6 @@ func init() {
 }
 
 func shutdownHandler() {
-	logger.Info("Shutting down")
 
 	if token := cl.Unsubscribe(queue); token.Wait() && token.Error() != nil {
 		logger.Error("Error unsubscribing from queue", "err", token.Error())
@@ -44,6 +43,8 @@ func shutdownHandler() {
 		dumpFile.Sync()
 		dumpFile.Close()
 	}
+
+	logger.Info("Done ...")
 }
 
 func workerHandler() {
@@ -53,11 +54,11 @@ func workerHandler() {
 //
 // Structure of the CSV file:
 //
-// TS, Batch, N, DeviceID, RecordingTS, TH, ST, HEAD
+// TS, Batch, N, DeviceID, TH, ST, HEAD
 //
 
 func dataFrameToCSVString(df *telemetry.DataFrame) string {
-	return fmt.Sprintf("%d,%d,%d,%s,%s,%s,%s,%s\n", df.TS, df.Batch, df.N, df.DeviceID, df.Data["recording_ts"], df.Data["th"], df.Data["st"], df.Data["head"])
+	return fmt.Sprintf("%d,%d,%d,%s,%s,%s,%s\n", df.TS, df.Batch, df.N, df.DeviceID, df.Data["th"], df.Data["st"], df.Data["head"])
 }
 
 func receiveDataFrame(client mqtt.Client, msg mqtt.Message) {
@@ -75,12 +76,13 @@ func receiveDataFrame(client mqtt.Client, msg mqtt.Message) {
 			logger.Error("Error dumping data to file", "err", err.Error())
 		}
 	} else {
+		// type == telemetry.BLOB
 		if len(df.Blob) != 0 {
 			blob, err := base64.StdEncoding.DecodeString(df.Blob)
 			if err != nil {
 				logger.Error("Error unmarshalling a blob", "err", err.Error())
 			} else {
-				fn := fmt.Sprintf("%s/%d_%d.jpg", currentDir, df.Batch, df.N)
+				fn := fmt.Sprintf("%s/%d_%d_%d.jpg", currentDir, df.Batch, df.N, df.TS)
 				err := ioutil.WriteFile(fn, blob, 0644)
 				if err != nil {
 					logger.Error("Error dumping blob to file", "file", fn, "err", err.Error())
@@ -101,7 +103,7 @@ func main() {
 	go func() {
 		<-sigs
 		shutdownHandler()
-		os.Exit(1)
+		os.Exit(0)
 	}()
 
 	// prepare the datadump location

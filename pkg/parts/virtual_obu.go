@@ -65,8 +65,8 @@ func remoteStateHandler() {
 			Throttle:    100 * state.Throttle,
 			Heading:     360,
 			Recording:   state.Recording,
-			RecordingTS: util.Timestamp(),
-			TS:          util.Timestamp(),
+			RecordingTS: util.TimestampNano(),
+			TS:          util.TimestampNano(),
 		}
 
 		eventbus.InstanceOf().Publish("state/vehicle", &vehicle)
