@@ -42,3 +42,6 @@ venv.bak/
 .vscode/
 .DS_Store
 stuff.md
+
+# datadump
+**/data/*

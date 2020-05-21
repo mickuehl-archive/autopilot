@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"flag"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"shadow-racer/autopilot/v1/pkg/telemetry"
@@ -81,10 +84,24 @@ func main() {
 
 func receiveDataFrame(client mqtt.Client, msg mqtt.Message) {
 	var df telemetry.DataFrame
-
 	err := json.Unmarshal(msg.Payload(), &df)
 	if err == nil {
-		logger.Debug("dataframe", "data", df)
+		if df.Type == telemetry.KV {
+			logger.Debug("dataframe", "data", df)
+		} else {
+			if len(df.Blob) != 0 {
+				blob, err := base64.StdEncoding.DecodeString(df.Blob)
+				if err != nil {
+					logger.Error("Error unmarshalling a blob", "err", err.Error())
+				} else {
+					fn := fmt.Sprintf("./data/%d_%d.jpg", df.Batch, df.N)
+					err := ioutil.WriteFile(fn, blob, 0644)
+					if err != nil {
+						logger.Error("Error dumping blob to file", "file", fn, "err", err.Error())
+					}
+				}
+			}
+		}
 	} else {
 		logger.Error("Error unmarshalling a dataframe", "err", err.Error())
 	}

@@ -58,8 +58,9 @@ func (v *Vehicle) ToDataFrame() *telemetry.DataFrame {
 	df := telemetry.DataFrame{
 		DeviceID: "shadow-racer",
 		Batch:    v.RecordingTS,
-		Order:    v.TS,
+		N:        v.TS,
 		TS:       util.Timestamp(),
+		Type:     telemetry.KV,
 		Data:     make(map[string]string),
 	}
 	df.Data["mode"] = v.Mode
@@ -74,6 +75,11 @@ func (v *Vehicle) ToDataFrame() *telemetry.DataFrame {
 
 // ToVehicle creates an instance of vehicle state
 func ToVehicle(df *telemetry.DataFrame) *Vehicle {
+
+	if df.Type != telemetry.KV {
+		return nil
+	}
+
 	v := Vehicle{
 		Mode:      df.Data["mode"],
 		Recording: true,

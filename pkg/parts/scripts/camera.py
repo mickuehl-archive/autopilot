@@ -22,26 +22,30 @@ def timestamp():
     return int(datetime.utcnow().timestamp() * 1000000)
 
 
+def dataframe(batch, N, blob):
+    return {"deviceid": "shadow-racer", "batch": batch, "n": N, "ts": timestamp(), "type": 0,  "blob": str(base64.b64encode(blob), 'utf-8')}
+
+
 class StreamingOutput(object):
-    def __init__(self):
+    def __init__(self, broker, port, queue):
         self.frame = None
         self.buffer = io.BytesIO()
         self.condition = Condition()
-        self.dir = ".cam"
         self.recording = False
+        self.batch = timestamp()
         self.framecounter = 0
-        self.ts = timestamp()
         # MQTT
+        self.queue = queue
         self.mqttc = mqtt.Client()
-        self.mqttc.connect("192.168.8.117", 1883, 60)  # FIXME configuration
+        self.mqttc.connect(broker, port, 60)
         self.mqttc.loop_start()
 
     def start_recording(self, ts=0):
         if not self.recording:
             if ts == 0:
-                self.ts = timestamp()
+                self.batch = timestamp()
             else:
-                self.ts = ts
+                self.batch = ts
             self.recording = True
 
     def stop_recording(self):
@@ -59,12 +63,8 @@ class StreamingOutput(object):
             self.buffer.seek(0)
 
             if self.recording:
-                # FIXME configuration of the queue
-
-                self.mqttc.publish("shadow-racer/telemetry", json.dumps(
-                    {"deviceid": "shadow-racer", "batch": self.ts, "order": self.framecounter, "ts": timestamp(), "data": {"type": "image", "blob": str(base64.b64encode(buf), 'utf-8')}}), qos=0)
-                # open("{}/{}_{}.jpg".format(self.dir, self.ts,
-                #                           self.framecounter), "wb").write(buf)
+                self.mqttc.publish(self.queue, json.dumps(
+                    dataframe(self.batch, self.framecounter, buf)), qos=0)
 
             self.framecounter = self.framecounter + 1
 
@@ -134,13 +134,17 @@ if __name__ == '__main__':
     parser.add_argument('-r', '--resolution',
                         dest='resolution', default='1024x768')
     parser.add_argument('-f', '--fps', dest='fps', type=int, default='30')
-    parser.add_argument('-d', '--dir', dest='dir', default='.cam')
+    parser.add_argument('-q', '--queue', dest='queue',
+                        default='shadow-racer/telemetry')
+    parser.add_argument('-b', '--broker', dest='broker',
+                        default='D2027.lan')  # self.batch remove this !
+    parser.add_argument('-bp', '--broker_port',
+                        dest='broker_port', type=int, default='1883')
 
     args = parser.parse_args()
 
     with picamera.PiCamera(resolution=args.resolution, framerate=args.fps) as camera:
-        output = StreamingOutput()
-        output.dir = args.dir
+        output = StreamingOutput(args.broker, args.broker_port, args.queue)
 
         camera.start_preview()
         time.sleep(2)
