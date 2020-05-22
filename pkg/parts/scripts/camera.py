@@ -11,6 +11,7 @@ import picamera
 import paho.mqtt.client as mqtt
 import json
 import base64
+import websocket
 
 from threading import Condition
 from http import server
@@ -27,18 +28,16 @@ def dataframe(batch, N, blob):
 
 
 class StreamingOutput(object):
-    def __init__(self, broker, port, queue):
+    def __init__(self, endpoint):
         self.frame = None
         self.buffer = io.BytesIO()
         self.condition = Condition()
         self.recording = False
         self.batch = timestamp()
         self.framecounter = 0
-        # MQTT
-        self.queue = queue
-        self.mqttc = mqtt.Client()
-        self.mqttc.connect(broker, port, 60)
-        self.mqttc.loop_start()
+        # WS
+        self.ws = websocket.WebSocket()
+        self.ws.connect(endpoint)
 
     def start_recording(self, ts=0):
         if not self.recording:
@@ -47,6 +46,7 @@ class StreamingOutput(object):
             else:
                 self.batch = ts
             self.recording = True
+            self.framecounter = 0
 
     def stop_recording(self):
         if self.recording:
@@ -63,10 +63,9 @@ class StreamingOutput(object):
             self.buffer.seek(0)
 
             if self.recording:
-                self.mqttc.publish(self.queue, json.dumps(
-                    dataframe(self.batch, self.framecounter, buf)), qos=0)
+                self.ws.send(str(base64.b64encode(buf), 'utf-8'))
 
-            self.framecounter = self.framecounter + 1
+                self.framecounter = self.framecounter + 1
 
         return self.buffer.write(buf)
 
@@ -134,17 +133,13 @@ if __name__ == '__main__':
     parser.add_argument('-r', '--resolution',
                         dest='resolution', default='1024x768')
     parser.add_argument('-f', '--fps', dest='fps', type=int, default='30')
-    parser.add_argument('-q', '--queue', dest='queue',
-                        default='shadow-racer/telemetry')
-    parser.add_argument('-b', '--broker', dest='broker',
-                        default='D2027.lan')  # self.batch remove this !
-    parser.add_argument('-bp', '--broker_port',
-                        dest='broker_port', type=int, default='1883')
+    parser.add_argument('-ws', '--websocket', dest='ws',
+                        default='ws://localhost:3000/image')
 
     args = parser.parse_args()
 
     with picamera.PiCamera(resolution=args.resolution, framerate=args.fps) as camera:
-        output = StreamingOutput(args.broker, args.broker_port, args.queue)
+        output = StreamingOutput(args.ws)
 
         camera.start_preview()
         time.sleep(2)

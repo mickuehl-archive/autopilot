@@ -5,6 +5,8 @@ package eventbus
 import (
 	"sync"
 
+	"shadow-racer/autopilot/v1/pkg/metrics"
+
 	log "github.com/majordomusio/log15"
 )
 
@@ -63,6 +65,7 @@ func (eb *EventBus) Publish(topic string, data interface{}) {
 		}(DataEvent{Data: data, Topic: topic}, channels)
 	}
 	eb.rm.RUnlock()
+	metrics.Meter(topic)
 }
 
 // Subscribe returns a channel that listens on topic

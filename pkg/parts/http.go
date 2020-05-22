@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"shadow-racer/autopilot/v1/pkg/eventbus"
+	"shadow-racer/autopilot/v1/pkg/metrics"
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -24,46 +25,82 @@ type (
 func StartHTTPServer(addr string) error {
 	// most basic HTTP server in golang
 	http.Handle("/", http.FileServer(http.Dir("./public")))
-	http.Handle("/ws", http.HandlerFunc(wsHandler))
+	http.Handle("/state", http.HandlerFunc(wsStateHandler))
+	http.Handle("/image", http.HandlerFunc(wsImageHandler))
 
 	return http.ListenAndServe(addr, nil)
 }
 
-func wsHandler(w http.ResponseWriter, r *http.Request) {
+func wsStateHandler(w http.ResponseWriter, r *http.Request) {
 	conn, _, _, err := ws.UpgradeHTTP(r, w)
-	if err == nil {
-
-		var opcode ws.OpCode
-
-		go func() {
-			// receiver
-			defer conn.Close()
-			for {
-				msg, op, err := wsutil.ReadClientData(conn)
-				opcode = op
-
-				if err != nil {
-					break // FIXME abort on the first error, really ?
-				} else {
-					var state RemoteState
-					err := json.Unmarshal(msg, &state)
-					if err == nil {
-						eventbus.InstanceOf().Publish("rc/state", state)
-					}
-				}
-			}
-		}()
-
-		go func() {
-			// sender
-			ch := eventbus.InstanceOf().Subscribe("state/vehicle")
-			for {
-				vehicle := <-ch
-				data, err := json.Marshal(&vehicle)
-				if err == nil {
-					wsutil.WriteServerMessage(conn, opcode, data)
-				}
-			}
-		}()
+	if err != nil {
+		logger.Error("Error upgrading HTTP to WS", "err", err.Error())
+		return
 	}
+
+	var opcode ws.OpCode
+
+	go func() {
+		// receiver
+		defer conn.Close()
+		for {
+			msg, op, err := wsutil.ReadClientData(conn)
+			opcode = op
+
+			if err != nil {
+				logger.Error("Error receiving WS message", "err", err.Error())
+				break // FIXME abort on the first error, really ?
+			} else {
+				var state RemoteState
+				err := json.Unmarshal(msg, &state)
+				if err == nil {
+					eventbus.InstanceOf().Publish("rc/state", state)
+				}
+			}
+			metrics.Meter("hud/receive")
+		}
+	}()
+
+	go func() {
+		// sender
+		ch := eventbus.InstanceOf().Subscribe("state/vehicle")
+		for {
+			vehicle := <-ch
+			data, err := json.Marshal(&vehicle)
+			if err == nil {
+				wsutil.WriteServerMessage(conn, opcode, data)
+				metrics.Meter("hud/update")
+			}
+		}
+	}()
+}
+
+func wsImageHandler(w http.ResponseWriter, r *http.Request) {
+	conn, _, _, err := ws.UpgradeHTTP(r, w)
+	if err != nil {
+		logger.Error("Error upgrading HTTP to WS", "err", err.Error())
+		return
+	}
+
+	go func() {
+		defer conn.Close()
+		for {
+			msg, _, err := wsutil.ReadClientData(conn)
+
+			if err != nil {
+				logger.Error("Error receiving WS message", "err", err.Error())
+				break // FIXME abort on the first error, really ?
+			} else {
+				if len(msg) == 0 {
+
+				}
+				//var df telemetry.DataFrame
+				//err := json.Unmarshal(msg, &df)
+				//if err == nil {
+				//	//eventbus.InstanceOf().Publish("rc/state", state)
+				//}
+			}
+			metrics.Meter("image/receive")
+		}
+	}()
 }
