@@ -13,10 +13,9 @@ type (
 	DataFrame struct {
 		DeviceID string  `json:"deviceid"`        // any identifier of the device, e.g. a hostname, serial number etc.
 		Batch    int64   `json:"batch,omitempty"` // a prefix to group telemetry data
-		N        int64   `json:"n,omitempty"`     // a running number or timestamp within a batch
-		TS       int64   `json:"ts"`              // the timestamp the message was sent
 		Type     int     `json:"type"`            // the type of the payload: BLOB or KV
 		Data     DataMap `json:"data,omitempty"`  // data in a key/value set
 		Blob     string  `json:"blob,omitempty"`  // binary data in base64 encoded string
+		TS       int64   `json:"ts"`              // the timestamp the message was sent
 	}
 )

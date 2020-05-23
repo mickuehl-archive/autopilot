@@ -68,7 +68,7 @@ func wsStateHandler(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		// sender
-		ch := eventbus.InstanceOf().Subscribe(topicRCStateSend)
+		ch := eventbus.InstanceOf().Subscribe(topicRCStateUpdate)
 		for {
 			vehicle := <-ch
 			data, err := json.Marshal(&vehicle)
@@ -96,7 +96,7 @@ func wsImageHandler(w http.ResponseWriter, r *http.Request) {
 				logger.Error("Error receiving WS message", "err", err.Error())
 				break // FIXME abort on the first error, really ?
 			} else {
-				eventbus.InstanceOf().Publish("image/receive", msg)
+				eventbus.InstanceOf().Publish(topicImageReceive, msg) // FIXME check if we can pass a pointer to msg
 			}
 			metrics.Mark(mImageReceive)
 		}

@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"shadow-racer/autopilot/v1/pkg/metrics"
 	"shadow-racer/autopilot/v1/pkg/telemetry"
 	"syscall"
 	"time"
@@ -15,6 +16,11 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/majordomusio/commons/pkg/util"
 	log "github.com/majordomusio/log15"
+)
+
+const (
+	mDataFramesRxv = "mqtt/df/rxv"
+	mImagesRxv     = "mqtt/image/rxv"
 )
 
 var (
@@ -48,17 +54,17 @@ func shutdownHandler() {
 }
 
 func workerHandler() {
-	// FIXME do periodic work
+	metrics.DumpMeters()
 }
 
 //
 // Structure of the CSV file:
 //
-// TS, Batch, N, DeviceID, TH, ST, HEAD
+// TS, Batch, DeviceID, TH, ST, HEAD
 //
 
 func dataFrameToCSVString(df *telemetry.DataFrame) string {
-	return fmt.Sprintf("%d,%d,%d,%s,%s,%s,%s\n", df.TS, df.Batch, df.N, df.DeviceID, df.Data["th"], df.Data["st"], df.Data["head"])
+	return fmt.Sprintf("%d,%d,%s,%s,%s,%s\n", df.TS, df.Batch, df.DeviceID, df.Data["th"], df.Data["st"], df.Data["head"])
 }
 
 func receiveDataFrame(client mqtt.Client, msg mqtt.Message) {
@@ -75,6 +81,7 @@ func receiveDataFrame(client mqtt.Client, msg mqtt.Message) {
 		if err != nil {
 			logger.Error("Error dumping data to file", "err", err.Error())
 		}
+		metrics.Mark(mDataFramesRxv)
 	} else {
 		// type == telemetry.BLOB
 		if len(df.Blob) != 0 {
@@ -82,12 +89,13 @@ func receiveDataFrame(client mqtt.Client, msg mqtt.Message) {
 			if err != nil {
 				logger.Error("Error unmarshalling a blob", "err", err.Error())
 			} else {
-				fn := fmt.Sprintf("%s/%d_%d_%d.jpg", currentDir, df.Batch, df.N, df.TS)
+				fn := fmt.Sprintf("%s/%d_%d.jpg", currentDir, df.Batch, df.TS)
 				err := ioutil.WriteFile(fn, blob, 0644)
 				if err != nil {
 					logger.Error("Error dumping blob to file", "file", fn, "err", err.Error())
 				}
 			}
+			metrics.Mark(mImagesRxv)
 		}
 	}
 }
@@ -106,8 +114,13 @@ func main() {
 		os.Exit(0)
 	}()
 
+	// prepare some metrics
+	metrics.NewMeter(mDataFramesRxv)
+	metrics.NewMeter(mImagesRxv)
+
 	// prepare the datadump location
-	currentDir = fmt.Sprintf("dump/%d", util.Timestamp())
+	now := util.Timestamp()
+	currentDir = fmt.Sprintf("dump/%d", now)
 	err := os.MkdirAll(currentDir, 0755)
 	if err != nil {
 		logger.Error("Error creating the data directory", "dir", currentDir, "err", err.Error())
@@ -115,7 +128,8 @@ func main() {
 	}
 
 	// datadump file
-	dumpFile, err = os.Create(currentDir + "/data.csv")
+	currentFile := fmt.Sprintf("%s/%d_data.csv", currentDir, now)
+	dumpFile, err = os.Create(currentFile)
 	if err != nil {
 		logger.Error("Error creating the data file", "file", currentDir+"/data.csv", "err", err.Error())
 		os.Exit(1)
@@ -141,7 +155,7 @@ func main() {
 	logger.Info("Ready to receive data", "queue", queue, "broker", broker)
 
 	// periodic background processes
-	backgroundChannel := time.NewTicker(time.Second * time.Duration(10)).C
+	backgroundChannel := time.NewTicker(time.Second * time.Duration(60)).C
 	for {
 		<-backgroundChannel
 		workerHandler()

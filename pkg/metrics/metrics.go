@@ -49,3 +49,10 @@ func Mark(item string) {
 		m.Mark(1)
 	}
 }
+
+// MarkN measures the number & frequency of something
+func MarkN(item string, n int64) {
+	if m, ok := metrics[item]; ok {
+		m.Mark(n)
+	}
+}

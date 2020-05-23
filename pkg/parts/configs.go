@@ -2,13 +2,16 @@ package parts
 
 const (
 	// topics
-	topicRCStateReceive = "rc/state"
-	topicRCStateSend    = "state/vehicle"
+	topicRCStateReceive = "rc/receive"
+	topicRCStateUpdate  = "rc/update"
 	topicImageReceive   = "image/receive"
+	topicTelemetrySend  = "telemetry/send"
 	// metrics
-	mHUDReceive   = "hud/receive"
-	mHUDUpdate    = "hud/update"
-	mImageReceive = "image/receive"
+	mHUDReceive    = "hud/receive"
+	mHUDUpdate     = "hud/update"
+	mStateUpdate   = "state/update"
+	mImageReceive  = "image/receive"
+	mTelemetrySend = "telemetry/send"
 )
 
 // NewBMS390DMH creates an instance of a BMS390DMH servo

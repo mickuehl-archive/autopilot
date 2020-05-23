@@ -3,17 +3,20 @@ package parts
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"sync"
+	"time"
 
 	"github.com/majordomusio/commons/pkg/util"
 
 	"shadow-racer/autopilot/v1/pkg/eventbus"
+	"shadow-racer/autopilot/v1/pkg/metrics"
 	"shadow-racer/autopilot/v1/pkg/obu"
 	"shadow-racer/autopilot/v1/pkg/telemetry"
 )
 
 const (
+	TICK = 40 // update every TICK
+
 	stateDriving = "DRIVING"
 	stateStopped = "STOPPED"
 )
@@ -22,20 +25,22 @@ type (
 
 	// Vehicle holds state information of a generic vehicle
 	Vehicle struct {
-		Mode        string  `json:"mode"` // some string, e.g. DRIVING, STOPPED, etc
-		Throttle    float32 `json:"th"`   // -100 .. 100
-		Steering    float32 `json:"st"`   // in deg, 0 is straight ahead
-		Heading     float32 `json:"head"` // heading of the vehicle 0 -> North, 90 -> East ...
-		Recording   bool    `json:"recording"`
-		RecordingTS int64   `json:"recording_ts"`
-		TS          int64   `json:"ts"` // timestamp
+		Mode     string  `json:"mode"` // some string, e.g. DRIVING, STOPPED, etc
+		Throttle float32 `json:"th"`   // -100 .. 100
+		Steering float32 `json:"st"`   // in deg, 0 is straight ahead
+		Heading  float32 `json:"head"` // heading of the vehicle 0 -> North, 90 -> East ...
+		Batch    int64   `json:"batch"`
+		TS       int64   `json:"ts"` // timestamp
 	}
 
 	// VehicleState is an aggregate of vehicle state and other state information
 	VehicleState struct {
-		mutex   *sync.Mutex
-		obu     obu.OnboardUnit
-		vehicle *Vehicle
+		mutex *sync.Mutex
+		obu   obu.OnboardUnit
+
+		Recording bool
+		vehicle   *Vehicle
+		image     []byte
 	}
 )
 
@@ -45,20 +50,25 @@ func NewVehicleState(o obu.OnboardUnit) *VehicleState {
 		mutex: &sync.Mutex{},
 		obu:   o,
 		vehicle: &Vehicle{
-			Mode:        stateStopped,
-			Throttle:    0.0,
-			Steering:    0.0,
-			Heading:     0.0,
-			Recording:   false,
-			RecordingTS: 0,
-			TS:          util.TimestampNano(),
+			Mode:     stateStopped,
+			Throttle: 0.0,
+			Steering: 0.0,
+			Heading:  0.0,
+			Batch:    0,
+			TS:       util.TimestampNano(),
 		},
 	}
 }
 
 // Initialize prepares the device/component
 func (v *VehicleState) Initialize() error {
+	metrics.NewMeter(mStateUpdate)
+
+	// start the event processing
 	go v.RemoteStateHandler()
+	go v.RemoteImageHandler()
+	go v.PeriodicUpdate()
+
 	return nil
 }
 
@@ -74,7 +84,7 @@ func (v *VehicleState) Shutdown() error {
 
 // RemoteStateHandler listens remote state changes and updates the vehicle state accordingly
 func (v *VehicleState) RemoteStateHandler() {
-	logger.Info("Starting the remote state handler", "rxv", topicRCStateReceive, "txv", topicRCStateSend)
+	logger.Info("Starting the remote state handler", "rxv", topicRCStateReceive, "txv", topicRCStateUpdate)
 
 	ch := eventbus.InstanceOf().Subscribe(topicRCStateReceive)
 	for {
@@ -95,30 +105,29 @@ func (v *VehicleState) RemoteStateHandler() {
 				// FIXME should not happen
 			}
 			v.vehicle.Mode = state.Mode
-			v.vehicle.Recording = state.Recording
 		} else {
 			//v.vehicle.Steering = 100.0 * ((float32(o.servo.MaxRange) / 90.0) * state.Steering)
 			v.vehicle.Steering = 100.0 * ((30.0 / 90.0) * state.Steering) // FIXME -> o.servo.MaxRange config
 			v.vehicle.Throttle = 100.0 * state.Throttle
 		}
 
-		if state.Recording != v.vehicle.Recording {
+		if state.Recording != v.Recording {
 			baseURL := "http://localhost:3001" // FIXME configuration
 
 			if state.Recording == true {
-				v.vehicle.RecordingTS = util.Timestamp()
-				v.vehicle.Recording = true
+				v.vehicle.Batch = util.Timestamp()
+				v.Recording = true
 
-				resp, err := http.Get(fmt.Sprintf("%s/start?ts=%d", baseURL, v.vehicle.RecordingTS))
+				resp, err := http.Get(fmt.Sprintf("%s/start?ts=%d", baseURL, v.vehicle.Batch))
 
 				if err != nil {
 					logger.Error("Error toggling recording", "err", err.Error())
 				} else {
-					logger.Info("Started recording", "ts", v.vehicle.RecordingTS)
+					logger.Info("Started recording", "ts", v.vehicle.Batch)
 				}
 				defer resp.Body.Close()
 			} else {
-				v.vehicle.Recording = false
+				v.Recording = false
 				resp, err := http.Get(baseURL + "/stop")
 
 				if err != nil {
@@ -133,7 +142,7 @@ func (v *VehicleState) RemoteStateHandler() {
 		v.vehicle.TS = util.TimestampNano()
 
 		// publish the new state
-		eventbus.InstanceOf().Publish(topicRCStateSend, v.vehicle.Clone())
+		eventbus.InstanceOf().Publish(topicRCStateUpdate, v.vehicle.Clone())
 
 		// set the actuators
 		v.obu.Direction(int(v.vehicle.Steering))
@@ -143,49 +152,74 @@ func (v *VehicleState) RemoteStateHandler() {
 	}
 }
 
-// NoopRemoteStateHandler is a no-op state handler i.e. values are just passed through
-func NoopRemoteStateHandler() {
-	logger.Info("Starting the NOOP remote state handler", "rxv", topicRCStateReceive, "txv", topicRCStateSend)
+// RemoteImageHandler receives individual camera frames
+func (v *VehicleState) RemoteImageHandler() {
+	logger.Info("Starting the remote image handler", "rxv", topicImageReceive)
 
-	ch := eventbus.InstanceOf().Subscribe(topicRCStateReceive)
+	ch := eventbus.InstanceOf().Subscribe(topicImageReceive)
 	for {
 		evt := <-ch
-		state := evt.Data.(RemoteState)
 
-		vehicle := Vehicle{
-			Mode:        state.Mode,
-			Steering:    100 * ((ServoRange / 90.0) * state.Steering),
-			Throttle:    100 * state.Throttle,
-			Heading:     360,
-			Recording:   state.Recording,
-			RecordingTS: util.TimestampNano(),
-			TS:          util.TimestampNano(),
+		// just update with the latest image
+		v.mutex.Lock()
+		v.image = evt.Data.([]byte)
+		v.mutex.Unlock()
+	}
+}
+
+// PeriodicUpdate sends telemetry data in fixed intervals
+func (v *VehicleState) PeriodicUpdate() {
+	logger.Info("Starting periodic state update", "TICK", TICK)
+
+	// periodic background processes
+	ticks := time.NewTicker(time.Millisecond * time.Duration(TICK)).C // about 20x/s
+	for {
+		<-ticks
+
+		v.mutex.Lock()
+
+		if v.Recording {
+			ts := util.TimestampNano()
+
+			// send the state
+			df1 := v.vehicle.toDataFrame()
+			df1.TS = ts
+			eventbus.InstanceOf().Publish(topicTelemetrySend, df1)
+
+			// send the current image
+			df2 := telemetry.DataFrame{
+				DeviceID: "shadow-racer",
+				Batch:    v.vehicle.Batch,
+				TS:       ts,
+				Type:     telemetry.BLOB,
+				Blob:     string(v.image),
+			}
+			eventbus.InstanceOf().Publish(topicTelemetrySend, &df2)
 		}
 
-		eventbus.InstanceOf().Publish(topicRCStateSend, &vehicle)
+		v.mutex.Unlock()
+
+		metrics.Mark(mStateUpdate)
 	}
 }
 
 // Clone returns a deep copy the vehicle state
 func (v *Vehicle) Clone() *Vehicle {
 	return &Vehicle{
-		Mode:        v.Mode,
-		Throttle:    v.Throttle,
-		Steering:    v.Steering,
-		Heading:     v.Heading,
-		Recording:   v.Recording,
-		RecordingTS: v.RecordingTS,
-		TS:          v.TS,
+		Mode:     v.Mode,
+		Throttle: v.Throttle,
+		Steering: v.Steering,
+		Heading:  v.Heading,
+		Batch:    v.Batch,
+		TS:       v.TS,
 	}
 }
 
-// ToDataFrame converts a vehicle state struct into a dataframe
-func (v *Vehicle) ToDataFrame() *telemetry.DataFrame {
+func (v *Vehicle) toDataFrame() *telemetry.DataFrame {
 	df := telemetry.DataFrame{
 		DeviceID: "shadow-racer",
-		Batch:    v.RecordingTS,
-		N:        v.TS,
-		TS:       util.TimestampNano(),
+		Batch:    v.Batch,
+		TS:       v.TS,
 		Type:     telemetry.KV,
 		Data:     make(map[string]string),
 	}
@@ -193,33 +227,6 @@ func (v *Vehicle) ToDataFrame() *telemetry.DataFrame {
 	df.Data["th"] = fmt.Sprintf("%f", v.Throttle)
 	df.Data["st"] = fmt.Sprintf("%f", v.Steering)
 	df.Data["head"] = fmt.Sprintf("%f", v.Heading)
-	df.Data["recording_ts"] = fmt.Sprintf("%d", v.RecordingTS)
-	df.Data["ts"] = fmt.Sprintf("%d", v.TS)
 
 	return &df
-}
-
-// ToVehicle creates an instance of vehicle state
-func ToVehicle(df *telemetry.DataFrame) *Vehicle {
-
-	if df.Type != telemetry.KV {
-		return nil
-	}
-
-	v := Vehicle{
-		Mode:      df.Data["mode"],
-		Recording: true,
-	}
-	f, _ := strconv.ParseFloat(df.Data["th"], 32)
-	v.Throttle = float32(f)
-	f, _ = strconv.ParseFloat(df.Data["st"], 32)
-	v.Steering = float32(f)
-	f, _ = strconv.ParseFloat(df.Data["head"], 32)
-	v.Heading = float32(f)
-	i, _ := strconv.ParseInt(df.Data["ts"], 10, 64)
-	v.TS = i
-	i, _ = strconv.ParseInt(df.Data["recording_ts"], 10, 64)
-	v.RecordingTS = i
-
-	return &v
 }

@@ -24,7 +24,7 @@ def timestamp():
 
 
 def dataframe(batch, N, blob):
-    return {"deviceid": "shadow-racer", "batch": batch, "n": N, "ts": timestamp(), "type": 0,  "blob": str(base64.b64encode(blob), 'utf-8')}
+    return {"deviceid": "shadow-racer", "batch": batch, "ts": timestamp(), "type": 0,  "blob": str(base64.b64encode(blob), 'utf-8')}
 
 
 class StreamingOutput(object):

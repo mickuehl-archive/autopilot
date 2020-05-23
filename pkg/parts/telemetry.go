@@ -7,6 +7,8 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 
 	"shadow-racer/autopilot/v1/pkg/eventbus"
+	"shadow-racer/autopilot/v1/pkg/metrics"
+	"shadow-racer/autopilot/v1/pkg/telemetry"
 )
 
 type (
@@ -38,7 +40,9 @@ func NewTelemetry(broker, queue string) *Telemetry {
 
 // Initialize prepares the telemetry component
 func (t *Telemetry) Initialize() error {
+	metrics.NewMeter(mTelemetrySend)
 	go t.sendData()
+
 	return nil
 }
 
@@ -54,18 +58,17 @@ func (t *Telemetry) Shutdown() error {
 }
 
 func (t *Telemetry) sendData() {
-	ch := eventbus.InstanceOf().Subscribe(topicRCStateSend)
+	ch := eventbus.InstanceOf().Subscribe(topicTelemetrySend)
 	for {
 		evt := <-ch
-		vehicle := evt.Data.(*Vehicle)
+		df := evt.Data.(*telemetry.DataFrame)
 
-		if vehicle.Recording {
-			payload, err := json.Marshal(vehicle.ToDataFrame())
-			if err == nil {
-				t.cl.Publish(t.queue, 0, false, payload)
-			} else {
-				logger.Error("Error marshalling data", "err", err.Error())
-			}
+		payload, err := json.Marshal(df)
+		if err == nil {
+			t.cl.Publish(t.queue, 0, false, payload)
+			metrics.Mark(mTelemetrySend)
+		} else {
+			logger.Error("Error marshalling data", "err", err.Error())
 		}
 	}
 }
