@@ -53,11 +53,11 @@ function lockChangeAlert() {
     } else {
         document.removeEventListener("mousemove", updatePosition, false)
 
-        resetCanvas()
-
         state.mode = "STOPPED"
         state.recording = false
         sendState(state)
+
+        resetCanvas()
     }
 }
 

@@ -8,11 +8,16 @@ import (
 	log "github.com/majordomusio/log15"
 
 	"shadow-racer/autopilot/v1/pkg/autopilot"
+	"shadow-racer/autopilot/v1/pkg/obu"
 	"shadow-racer/autopilot/v1/pkg/parts"
 )
 
 var (
 	logger log.Logger
+	// the autopilot instance
+	ap *autopilot.Autopilot
+	// the obu in use
+	ob obu.OnboardUnit
 )
 
 func init() {
@@ -27,45 +32,49 @@ func main() {
 	var broker string
 	var queue string
 
-	// the autopilot instance
-	var ap *autopilot.Autopilot
-
 	// get command line options
 	flag.StringVar(&obuType, "obu", "raspi", "Select an on-board unit implementation")
 	flag.IntVar(&port, "port", 3000, "Port of the remote UI and API")
 	flag.StringVar(&broker, "b", "tcp://localhost:1883", "MQTT Broker endpoint")
 	flag.StringVar(&queue, "q", "shadow-racer/telemetry", "Default queue for telemetry data")
-
 	flag.Parse()
 
-	// create a OBU and add it to an autopilot
-	if obuType == "raspi" {
+	// create a OBU and autopilot
+	if obuType == "virtual" {
+		// create a virtual OBU for local testing
+		ob = parts.NewVirtualOnboardUnit()
+		// standard autopilot
+		ap, _ = autopilot.NewInstance(ob)
+	} else if obuType == "raspi" {
 		// create a ShadowRacer OBU
-		obu, err := parts.NewRaspiOnboardUnit()
+		o, err := parts.NewRaspiOnboardUnit()
 		if err != nil {
 			os.Exit(1)
 		}
+		ob = o
 
 		// standard autopilot
-		ap, err = autopilot.NewInstance(obu)
+		ap, err = autopilot.NewInstance(ob)
 		if err != nil {
 			os.Exit(1)
 		}
-	} else if obuType == "virtual" {
-		// create a virtual OBU for local testing
-		obu := parts.NewVirtualOnboardUnit()
-		// standard autopilot
-		ap, _ = autopilot.NewInstance(obu)
 	} else {
-		os.Exit(1)
+		os.Exit(1) // should not happen
 	}
 	defer ap.Shutdown()
 
+	//
 	// add parts to the autopilot
+	//
+
+	// capture the camera stream
 	ap.AddPart("camera", parts.NewLiveStreamCamera(fmt.Sprintf(":%d", port+1)))
+	// maintain the vehicle state
+	ap.AddPart("state", parts.NewVehicleState(ob))
+	// "connected-car", send the vehicle state to a DC
 	ap.AddPart("telemetry", parts.NewTelemetry(broker, queue))
 
-	// add a http server as the remote pilot
+	// start the http server as the remote pilot
 	remotepilot := func() {
 		logger.Info("RemotePilot engaged")
 
@@ -79,11 +88,11 @@ func main() {
 	}
 	ap.AddWork(remotepilot)
 
-	// initialize the autopilot & vehicle
+	// initialize the autopilot and all parts
 	ap.Initialize()
 
 	// activate the autopilot
 	ap.Activate()
 
-	// cleanup should happen automatically
+	// cleanup should happen automatically on exit
 }

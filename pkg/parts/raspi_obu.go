@@ -2,18 +2,12 @@ package parts
 
 import (
 	"errors"
-	"fmt"
 	"log"
-	"net/http"
 	"sync"
 	"time"
 
-	"github.com/majordomusio/commons/pkg/util"
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/raspi"
-
-	"shadow-racer/autopilot/v1/pkg/eventbus"
-	"shadow-racer/autopilot/v1/pkg/obu"
 )
 
 const (
@@ -24,9 +18,6 @@ const (
 	steeringChan = 3
 	led1Chan     = 8
 	led2Chan     = 11
-
-	stateDriving = "DRIVING"
-	stateStopped = "STOPPED"
 )
 
 type (
@@ -42,8 +33,6 @@ type (
 		// some other state
 		bkLights int // 0 .. 4000. 0 = off, 4000 = max
 
-		// high-level vehicle state
-		vehicle *obu.Vehicle
 	}
 )
 
@@ -67,15 +56,6 @@ func NewRaspiOnboardUnit() (*RaspiOnboardUnit, error) {
 		actuators: pca9685,
 		servo:     NewBMS390DMH(steeringChan),
 		esc:       NewWP40(throttleChan),
-		vehicle: &obu.Vehicle{
-			Mode:        stateStopped,
-			Throttle:    0.0,
-			Steering:    0.0,
-			Heading:     0.0,
-			Recording:   false,
-			RecordingTS: 0,
-			TS:          util.TimestampNano(),
-		},
 	}
 	// set a speed limit for now
 	obu.esc.Limit = 30
@@ -103,9 +83,6 @@ func (o *RaspiOnboardUnit) Initialize() error {
 		time.Sleep(500 * time.Millisecond)
 	}
 
-	// start all event handlers
-	go o.RCStateHandler()
-
 	// all good
 	logger.Info("OBU is ready")
 	return nil
@@ -122,76 +99,6 @@ func (o *RaspiOnboardUnit) Shutdown() error {
 	// stop the hardware
 	o.actuators.Halt()
 	return o.adaptor.Finalize()
-}
-
-// Event handlers etc
-
-// RCStateHandler listens on events for remote state changes
-func (o *RaspiOnboardUnit) RCStateHandler() {
-	ch := eventbus.InstanceOf().Subscribe("rc/state")
-	for {
-		evt := <-ch
-		state := evt.Data.(RemoteState)
-
-		o.mutex.Lock()
-
-		if state.Mode != o.vehicle.Mode {
-			if state.Mode == stateDriving {
-				// assumes o.vehicle.Mode == STOPPED
-				o.TailLights(4000, true)
-			} else if state.Mode == stateStopped {
-				o.TailLightsOff()
-				o.vehicle.Throttle = 0.0
-				o.vehicle.Steering = 0.0
-			} else {
-				// FIXME should not happen
-			}
-			o.vehicle.Mode = state.Mode
-			o.vehicle.Recording = state.Recording
-		} else {
-			o.vehicle.Steering = 100.0 * ((float32(o.servo.MaxRange) / 90.0) * state.Steering)
-			o.vehicle.Throttle = 100.0 * state.Throttle
-		}
-
-		if state.Recording != o.vehicle.Recording {
-			baseURL := "http://localhost:3001" // FIXME configuration
-
-			if state.Recording == true {
-				o.vehicle.RecordingTS = util.Timestamp()
-				o.vehicle.Recording = true
-
-				resp, err := http.Get(fmt.Sprintf("%s/start?ts=%d", baseURL, o.vehicle.RecordingTS))
-
-				if err != nil {
-					logger.Error("Error toggling recording", "err", err.Error())
-				} else {
-					logger.Info("Started recording", "ts", o.vehicle.RecordingTS)
-				}
-				defer resp.Body.Close()
-			} else {
-				o.vehicle.Recording = false
-				resp, err := http.Get(baseURL + "/stop")
-
-				if err != nil {
-					logger.Error("Error toggling recording", "err", err.Error())
-				} else {
-					logger.Info("Stopped recording")
-				}
-				defer resp.Body.Close()
-			}
-		}
-
-		o.vehicle.TS = util.TimestampNano()
-
-		// publish the new state
-		eventbus.InstanceOf().Publish("state/vehicle", o.vehicle.Clone())
-
-		// set the actuators
-		o.Direction(int(o.vehicle.Steering))
-		o.Throttle(int(o.vehicle.Throttle))
-
-		o.mutex.Unlock()
-	}
 }
 
 // OBU specific functions
@@ -220,7 +127,7 @@ func (o *RaspiOnboardUnit) Direction(value int) {
 	o.SetChannelPulse(o.servo.Cfg.N, on, off)
 }
 
-// Throttle sets the speed (0..100)
+// Throttle sets the speed (-100..0..100)
 func (o *RaspiOnboardUnit) Throttle(value int) {
 	// expect ESC to calculate the pulse values
 	on, off := o.esc.SetThrottle(value)

@@ -1,5 +1,10 @@
 package parts
 
+const (
+	topicRCStateReceive = "rc/state"
+	topicRCStateSend    = "state/vehicle"
+)
+
 // NewBMS390DMH creates an instance of a BMS390DMH servo
 func NewBMS390DMH(n int) *StandardServo {
 	return &StandardServo{

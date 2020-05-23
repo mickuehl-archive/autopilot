@@ -1,12 +1,5 @@
 package parts
 
-import (
-	"shadow-racer/autopilot/v1/pkg/eventbus"
-	"shadow-racer/autopilot/v1/pkg/obu"
-
-	"github.com/majordomusio/commons/pkg/util"
-)
-
 const (
 	// ServoRange is the max allowed servo movement
 	ServoRange = 30.0
@@ -29,11 +22,7 @@ func NewVirtualOnboardUnit() *VirtualOnboardUnit {
 
 // Initialize prepares the device
 func (obu *VirtualOnboardUnit) Initialize() error {
-	logger.Debug("initialize the obu")
-
 	obu.running = true
-	go remoteStateHandler()
-
 	return nil
 }
 
@@ -53,22 +42,10 @@ func (obu *VirtualOnboardUnit) Shutdown() error {
 	return nil
 }
 
-func remoteStateHandler() {
-	ch := eventbus.InstanceOf().Subscribe("rc/state")
-	for {
-		evt := <-ch
-		state := evt.Data.(RemoteState)
+// Direction sets the steering direction (in deg)
+func (obu *VirtualOnboardUnit) Direction(value int) {
+}
 
-		vehicle := obu.Vehicle{
-			Mode:        state.Mode,
-			Steering:    100 * ((ServoRange / 90.0) * state.Steering),
-			Throttle:    100 * state.Throttle,
-			Heading:     360,
-			Recording:   state.Recording,
-			RecordingTS: util.TimestampNano(),
-			TS:          util.TimestampNano(),
-		}
-
-		eventbus.InstanceOf().Publish("state/vehicle", &vehicle)
-	}
+// Throttle sets the speed (-100..0..100)
+func (obu *VirtualOnboardUnit) Throttle(value int) {
 }

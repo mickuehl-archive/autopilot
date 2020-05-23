@@ -7,11 +7,11 @@ import (
 type (
 	// Part provides an interface to either a physical or logical part of the vehicle
 	Part interface {
-		// Initialize prepares the device
+		// Initialize prepares the device/component
 		Initialize() error
-		// Reset re-initializes the device
+		// Reset re-initializes the device/component
 		Reset() error
-		// Shutdown releases all resources
+		// Shutdown releases all resources/component
 		Shutdown() error
 	}
 

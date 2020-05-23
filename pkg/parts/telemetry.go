@@ -7,7 +7,6 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 
 	"shadow-racer/autopilot/v1/pkg/eventbus"
-	"shadow-racer/autopilot/v1/pkg/obu"
 )
 
 type (
@@ -55,10 +54,10 @@ func (t *Telemetry) Shutdown() error {
 }
 
 func (t *Telemetry) sendData() {
-	ch := eventbus.InstanceOf().Subscribe("state/vehicle")
+	ch := eventbus.InstanceOf().Subscribe(topicRCStateSend)
 	for {
 		evt := <-ch
-		vehicle := evt.Data.(*obu.Vehicle)
+		vehicle := evt.Data.(*Vehicle)
 
 		if vehicle.Recording {
 			payload, err := json.Marshal(vehicle.ToDataFrame())

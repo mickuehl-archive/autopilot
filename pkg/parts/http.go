@@ -54,7 +54,7 @@ func wsStateHandler(w http.ResponseWriter, r *http.Request) {
 				var state RemoteState
 				err := json.Unmarshal(msg, &state)
 				if err == nil {
-					eventbus.InstanceOf().Publish("rc/state", state)
+					eventbus.InstanceOf().Publish(topicRCStateReceive, state)
 				}
 			}
 			metrics.Meter("hud/receive")
@@ -63,7 +63,7 @@ func wsStateHandler(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		// sender
-		ch := eventbus.InstanceOf().Subscribe("state/vehicle")
+		ch := eventbus.InstanceOf().Subscribe(topicRCStateSend)
 		for {
 			vehicle := <-ch
 			data, err := json.Marshal(&vehicle)
@@ -91,14 +91,7 @@ func wsImageHandler(w http.ResponseWriter, r *http.Request) {
 				logger.Error("Error receiving WS message", "err", err.Error())
 				break // FIXME abort on the first error, really ?
 			} else {
-				if len(msg) == 0 {
-
-				}
-				//var df telemetry.DataFrame
-				//err := json.Unmarshal(msg, &df)
-				//if err == nil {
-				//	//eventbus.InstanceOf().Publish("rc/state", state)
-				//}
+				eventbus.InstanceOf().Publish("image/receive", msg)
 			}
 			metrics.Meter("image/receive")
 		}
