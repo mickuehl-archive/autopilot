@@ -23,6 +23,11 @@ type (
 
 // StartHTTPServer launches a http server that serves static content from ./public and exposes a websocket endpoint
 func StartHTTPServer(addr string) error {
+	// collect metrics
+	metrics.NewMeter(mHUDReceive)
+	metrics.NewMeter(mHUDUpdate)
+	metrics.NewMeter(mImageReceive)
+
 	// most basic HTTP server in golang
 	http.Handle("/", http.FileServer(http.Dir("./public")))
 	http.Handle("/state", http.HandlerFunc(wsStateHandler))
@@ -57,7 +62,7 @@ func wsStateHandler(w http.ResponseWriter, r *http.Request) {
 					eventbus.InstanceOf().Publish(topicRCStateReceive, state)
 				}
 			}
-			metrics.Meter("hud/receive")
+			metrics.Mark(mHUDReceive)
 		}
 	}()
 
@@ -69,7 +74,7 @@ func wsStateHandler(w http.ResponseWriter, r *http.Request) {
 			data, err := json.Marshal(&vehicle)
 			if err == nil {
 				wsutil.WriteServerMessage(conn, opcode, data)
-				metrics.Meter("hud/update")
+				metrics.Mark(mHUDUpdate)
 			}
 		}
 	}()
@@ -93,7 +98,7 @@ func wsImageHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				eventbus.InstanceOf().Publish("image/receive", msg)
 			}
-			metrics.Meter("image/receive")
+			metrics.Mark(mImageReceive)
 		}
 	}()
 }

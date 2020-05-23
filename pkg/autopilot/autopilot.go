@@ -8,6 +8,7 @@ import (
 
 	log "github.com/majordomusio/log15"
 
+	"shadow-racer/autopilot/v1/pkg/metrics"
 	"shadow-racer/autopilot/v1/pkg/obu"
 	"shadow-racer/autopilot/v1/pkg/parts"
 )
@@ -134,7 +135,10 @@ func (ap *Autopilot) Shutdown() error {
 		// FIXME something else?
 		return err
 	}
+
 	// FIXME do autopilot stuff here
+	metrics.DumpMeters()
+
 	return err
 }
 
