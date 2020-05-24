@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"shadow-racer/autopilot/v1/pkg/eventbus"
 	"shadow-racer/autopilot/v1/pkg/metrics"
+	"shadow-racer/autopilot/v1/pkg/sharedm"
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -96,7 +97,7 @@ func wsImageHandler(w http.ResponseWriter, r *http.Request) {
 				logger.Error("Error receiving WS message", "err", err.Error())
 				break // FIXME abort on the first error, really ?
 			} else {
-				eventbus.InstanceOf().Publish(topicImageReceive, msg) // FIXME check if we can pass a pointer to msg
+				sharedm.StoreBytes(topicImageReceive, msg)
 			}
 			metrics.Mark(mImageReceive)
 		}

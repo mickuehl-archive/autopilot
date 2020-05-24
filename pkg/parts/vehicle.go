@@ -11,6 +11,7 @@ import (
 	"shadow-racer/autopilot/v1/pkg/eventbus"
 	"shadow-racer/autopilot/v1/pkg/metrics"
 	"shadow-racer/autopilot/v1/pkg/obu"
+	"shadow-racer/autopilot/v1/pkg/sharedm"
 	"shadow-racer/autopilot/v1/pkg/telemetry"
 )
 
@@ -40,7 +41,6 @@ type (
 
 		Recording bool
 		vehicle   *Vehicle
-		image     []byte
 	}
 )
 
@@ -66,7 +66,6 @@ func (v *VehicleState) Initialize() error {
 
 	// start the event processing
 	go v.RemoteStateHandler()
-	go v.RemoteImageHandler()
 	go v.PeriodicUpdate()
 
 	return nil
@@ -152,21 +151,6 @@ func (v *VehicleState) RemoteStateHandler() {
 	}
 }
 
-// RemoteImageHandler receives individual camera frames
-func (v *VehicleState) RemoteImageHandler() {
-	logger.Info("Starting the remote image handler", "rxv", topicImageReceive)
-
-	ch := eventbus.InstanceOf().Subscribe(topicImageReceive)
-	for {
-		evt := <-ch
-
-		// just update with the latest image
-		v.mutex.Lock()
-		v.image = evt.Data.([]byte)
-		v.mutex.Unlock()
-	}
-}
-
 // PeriodicUpdate sends telemetry data in fixed intervals
 func (v *VehicleState) PeriodicUpdate() {
 	logger.Info("Starting periodic state update", "TICK", TICK)
@@ -187,14 +171,17 @@ func (v *VehicleState) PeriodicUpdate() {
 			eventbus.InstanceOf().Publish(topicTelemetrySend, df1)
 
 			// send the current image
-			df2 := telemetry.DataFrame{
-				DeviceID: "shadow-racer",
-				Batch:    v.vehicle.Batch,
-				TS:       ts,
-				Type:     telemetry.BLOB,
-				Blob:     string(v.image),
+			image, ok := sharedm.GetBytes(topicImageReceive)
+			if ok {
+				df2 := telemetry.DataFrame{
+					DeviceID: "shadow-racer",
+					Batch:    v.vehicle.Batch,
+					TS:       ts,
+					Type:     telemetry.BLOB,
+					Blob:     string(image),
+				}
+				eventbus.InstanceOf().Publish(topicTelemetrySend, &df2)
 			}
-			eventbus.InstanceOf().Publish(topicTelemetrySend, &df2)
 		}
 
 		v.mutex.Unlock()
