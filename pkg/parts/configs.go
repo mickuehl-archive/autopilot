@@ -4,7 +4,6 @@ const (
 	// topics
 	topicRCStateReceive = "rc/receive"
 	topicRCStateUpdate  = "rc/update"
-	topicImageReceive   = "image/receive"
 	topicTelemetrySend  = "telemetry/send"
 	// metrics
 	mHUDReceive    = "hud/receive"
@@ -12,6 +11,8 @@ const (
 	mStateUpdate   = "state/update"
 	mImageReceive  = "image/receive"
 	mTelemetrySend = "telemetry/send"
+	// shared memory
+	memImageRaw = "image/raw"
 )
 
 // NewBMS390DMH creates an instance of a BMS390DMH servo

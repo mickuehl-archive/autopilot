@@ -8,10 +8,9 @@ import traceback
 import socketserver
 import argparse
 import picamera
-import paho.mqtt.client as mqtt
 import json
 import base64
-import websocket
+import sys
 
 from threading import Condition
 from http import server
@@ -23,21 +22,14 @@ def timestamp():
     return int(datetime.utcnow().timestamp() * 1000000)
 
 
-def dataframe(batch, N, blob):
-    return {"deviceid": "shadow-racer", "batch": batch, "ts": timestamp(), "type": 0,  "blob": str(base64.b64encode(blob), 'utf-8')}
-
-
 class StreamingOutput(object):
-    def __init__(self, endpoint):
+    def __init__(self):
         self.frame = None
         self.buffer = io.BytesIO()
         self.condition = Condition()
         self.recording = False
         self.batch = timestamp()
         self.framecounter = 0
-        # WS
-        self.ws = websocket.WebSocket()
-        self.ws.connect(endpoint)
 
     def start_recording(self, ts=0):
         if not self.recording:
@@ -63,7 +55,8 @@ class StreamingOutput(object):
             self.buffer.seek(0)
 
             if self.recording:
-                self.ws.send(str(base64.b64encode(buf), 'utf-8'))
+                sys.stdout.buffer.write(buf)
+                sys.stdout.flush()
 
                 self.framecounter = self.framecounter + 1
 
@@ -133,13 +126,11 @@ if __name__ == '__main__':
     parser.add_argument('-r', '--resolution',
                         dest='resolution', default='1024x768')
     parser.add_argument('-f', '--fps', dest='fps', type=int, default='30')
-    parser.add_argument('-ws', '--websocket', dest='ws',
-                        default='ws://localhost:3000/image')
 
     args = parser.parse_args()
 
     with picamera.PiCamera(resolution=args.resolution, framerate=args.fps) as camera:
-        output = StreamingOutput(args.ws)
+        output = StreamingOutput()
 
         camera.start_preview()
         time.sleep(2)

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"shadow-racer/autopilot/v1/pkg/eventbus"
 	"shadow-racer/autopilot/v1/pkg/metrics"
-	"shadow-racer/autopilot/v1/pkg/sharedm"
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -27,12 +26,10 @@ func StartHTTPServer(addr string) error {
 	// collect metrics
 	metrics.NewMeter(mHUDReceive)
 	metrics.NewMeter(mHUDUpdate)
-	metrics.NewMeter(mImageReceive)
 
 	// most basic HTTP server in golang
 	http.Handle("/", http.FileServer(http.Dir("./public")))
 	http.Handle("/state", http.HandlerFunc(wsStateHandler))
-	http.Handle("/image", http.HandlerFunc(wsImageHandler))
 
 	return http.ListenAndServe(addr, nil)
 }
@@ -77,29 +74,6 @@ func wsStateHandler(w http.ResponseWriter, r *http.Request) {
 				wsutil.WriteServerMessage(conn, opcode, data)
 				metrics.Mark(mHUDUpdate)
 			}
-		}
-	}()
-}
-
-func wsImageHandler(w http.ResponseWriter, r *http.Request) {
-	conn, _, _, err := ws.UpgradeHTTP(r, w)
-	if err != nil {
-		logger.Error("Error upgrading HTTP to WS", "err", err.Error())
-		return
-	}
-
-	go func() {
-		defer conn.Close()
-		for {
-			msg, _, err := wsutil.ReadClientData(conn)
-
-			if err != nil {
-				logger.Error("Error receiving WS message", "err", err.Error())
-				break // FIXME abort on the first error, really ?
-			} else {
-				sharedm.StoreBytes(topicImageReceive, msg)
-			}
-			metrics.Mark(mImageReceive)
 		}
 	}()
 }

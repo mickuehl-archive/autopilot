@@ -2,6 +2,8 @@ package parts
 
 import (
 	"os/exec"
+	"shadow-racer/autopilot/v1/pkg/metrics"
+	"shadow-racer/autopilot/v1/pkg/sharedm"
 )
 
 type (
@@ -19,10 +21,32 @@ func NewLiveStreamCamera(port string) *LiveStreamCamera {
 
 // Initialize prepares the camera server
 func (c *LiveStreamCamera) Initialize() error {
-	c.proc = exec.Command("./camera.py") // FIXME pass parameters
+	metrics.NewMeter(mImageReceive)
 
-	err := c.proc.Start()
-	return err
+	c.proc = exec.Command("./camera.py") // FIXME pass parameters
+	stdout, err := c.proc.StdoutPipe()
+	if err != nil {
+		logger.Error("Error getting STDOUT", "err", err.Error())
+		return err
+	}
+
+	// read images from STDOUT and update the shared memory
+	go func() {
+		var buffer []byte
+		buffer = make([]byte, 100000) // FIXME depending on the camera resolution !!
+
+		for {
+			n, err := stdout.Read(buffer)
+			if err == nil {
+				if n > 0 {
+					sharedm.StoreBytes(memImageRaw, buffer[:n])
+					metrics.Mark(mImageReceive)
+				}
+			}
+		}
+	}()
+
+	return c.proc.Start()
 }
 
 // FIXME check if process is still running !

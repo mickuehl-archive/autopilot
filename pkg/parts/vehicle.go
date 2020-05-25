@@ -1,6 +1,7 @@
 package parts
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"sync"
@@ -16,7 +17,7 @@ import (
 )
 
 const (
-	TICK = 40 // update every TICK
+	updateTick = 40 // update every X, about 20x/s
 
 	stateDriving = "DRIVING"
 	stateStopped = "STOPPED"
@@ -153,10 +154,10 @@ func (v *VehicleState) RemoteStateHandler() {
 
 // PeriodicUpdate sends telemetry data in fixed intervals
 func (v *VehicleState) PeriodicUpdate() {
-	logger.Info("Starting periodic state update", "TICK", TICK)
+	logger.Info("Starting periodic state update", "TICK", updateTick)
 
 	// periodic background processes
-	ticks := time.NewTicker(time.Millisecond * time.Duration(TICK)).C // about 20x/s
+	ticks := time.NewTicker(time.Millisecond * time.Duration(updateTick)).C
 	for {
 		<-ticks
 
@@ -171,14 +172,14 @@ func (v *VehicleState) PeriodicUpdate() {
 			eventbus.InstanceOf().Publish(topicTelemetrySend, df1)
 
 			// send the current image
-			image, ok := sharedm.GetBytes(topicImageReceive)
+			image, ok := sharedm.GetBytes(memImageRaw)
 			if ok {
 				df2 := telemetry.DataFrame{
 					DeviceID: "shadow-racer",
 					Batch:    v.vehicle.Batch,
 					TS:       ts,
 					Type:     telemetry.BLOB,
-					Blob:     string(image),
+					Blob:     base64.StdEncoding.EncodeToString(image),
 				}
 				eventbus.InstanceOf().Publish(topicTelemetrySend, &df2)
 			}
