@@ -56,8 +56,9 @@ func NewMG996R(n int) *StandardServo {
 // NewWP40 creates an instance of a Reely WP40 speed controller
 func NewWP40(n int) *StandardSpeedController {
 	return &StandardSpeedController{
-		Throttle: 0,
-		Limit:    100,
+		Throttle:   0,
+		LowerLimit: -100,
+		UpperLimit: 100,
 		Cfg: ChannelCfg{
 			N:         n,
 			MinPulse:  1000, // not sure

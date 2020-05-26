@@ -58,7 +58,8 @@ func NewRaspiOnboardUnit() (*RaspiOnboardUnit, error) {
 		esc:       NewWP40(throttleChan),
 	}
 	// set a speed limit for now
-	obu.esc.Limit = 30
+	obu.esc.LowerLimit = 0
+	obu.esc.UpperLimit = 25
 
 	return obu, nil
 }

@@ -95,9 +95,11 @@ func (v *VehicleState) RemoteStateHandler() {
 
 		if state.Mode != v.vehicle.Mode {
 			if state.Mode == stateDriving {
+				logger.Debug("Started driving")
 				// assumes v.vehicle.Mode == STOPPED
 				//o.TailLights(4000, true) // FIXME enable tail lights
 			} else if state.Mode == stateStopped {
+				logger.Debug("Stopped driving")
 				//o.TailLightsOff() // FIXME disable tail lights
 				v.vehicle.Throttle = 0.0
 				v.vehicle.Steering = 0.0
@@ -110,6 +112,10 @@ func (v *VehicleState) RemoteStateHandler() {
 			v.vehicle.Steering = 100.0 * ((30.0 / 90.0) * state.Steering) // FIXME -> o.servo.MaxRange config
 			v.vehicle.Throttle = 100.0 * state.Throttle
 		}
+
+		// set the actuators
+		v.obu.Direction(int(v.vehicle.Steering))
+		v.obu.Throttle(int(v.vehicle.Throttle))
 
 		if state.Recording != v.Recording {
 			baseURL := "http://localhost:3001" // FIXME configuration
@@ -125,7 +131,7 @@ func (v *VehicleState) RemoteStateHandler() {
 				} else {
 					logger.Info("Started recording", "ts", v.vehicle.Batch)
 				}
-				defer resp.Body.Close()
+				resp.Body.Close()
 			} else {
 				v.Recording = false
 				resp, err := http.Get(baseURL + "/stop")
@@ -135,18 +141,13 @@ func (v *VehicleState) RemoteStateHandler() {
 				} else {
 					logger.Info("Stopped recording")
 				}
-				defer resp.Body.Close()
+				resp.Body.Close()
 			}
 		}
 
-		v.vehicle.TS = util.TimestampNano()
-
 		// publish the new state
+		v.vehicle.TS = util.TimestampNano()
 		eventbus.InstanceOf().Publish(topicRCStateUpdate, v.vehicle.Clone())
-
-		// set the actuators
-		v.obu.Direction(int(v.vehicle.Steering))
-		v.obu.Throttle(int(v.vehicle.Throttle))
 
 		v.mutex.Unlock()
 	}

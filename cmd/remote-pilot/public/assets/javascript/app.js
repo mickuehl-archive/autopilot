@@ -61,17 +61,25 @@ function lockChangeAlert() {
     }
 }
 
-function handleBreak() {
+function handleEmergencyBreak() {
     state.throttle = 0
+    state.steering = 0
+    state.recording = false
+    state.mode = "STOPPED"
     sendState(state)
 }
 
 function handleRecording() {
     if (state.recording == false) {
         state.recording = true
+        if (state.mode == "STOPPED") {
+            state.mode = "DRIVING"
+            trackerCanvas.requestPointerLock()
+        }
     } else {
         state.recording = false
     }
+    sendState(state)
 }
 
 // patch the camera stream source
@@ -87,7 +95,7 @@ sendState(state)
 
 // keybindings
 document.onkeydown = function (e) {
-    if (e.which == 32) { handleBreak() }
+    if (e.which == 32) { handleEmergencyBreak() }
     if (e.which == 82) { handleRecording() }
 }
 
